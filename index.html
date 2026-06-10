@@ -1,0 +1,1739 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>A.V. Leitura+ - Sistema de Habilidades</title>
+
+    <!-- Dependências externas -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mammoth@1.6.0/mammoth.browser.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+
+    <!-- Estilos do sistema -->
+    <link rel="stylesheet" href="css/temas.css">
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="css/componentes.css">
+    <link rel="stylesheet" href="css/dark-overrides.css">
+    <link rel="stylesheet" href="css/animacoes.css">
+    <link rel="stylesheet" href="css/responsivo.css">
+
+    <!-- Login isolado (sem dependências externas) -->
+    <script src="js/mensagens.js"></script>
+    <script src="js/loading.js"></script>
+    <script src="js/usuarios.js"></script>
+</head>
+<body>
+
+    <!-- ══════════════════════════════════════════════════════
+         TELA DE LOGIN
+    ══════════════════════════════════════════════════════ -->
+    <div id="login-screen">
+        <div class="login-card">
+            <div class="login-logo"><i class="fas fa-graduation-cap"></i></div>
+            <h1 class="login-title" id="login-titulo">A.V. Leitura+</h1>
+            <p class="login-sub"><span id="login-sub">Sistema de Acompanhamento de Leitura</span><br><small id="login-escola">U.I. Carolina Mesquita de Araújo</small></p>
+            <div class="login-error" id="login-error">Login ou senha incorretos.</div>
+
+            <div class="login-field">
+                <label>Login</label>
+                <div class="login-field-wrap">
+                    <i class="fas fa-user field-icon"></i>
+                    <input id="login-user" type="text" placeholder="Ex: 98991681091" autocomplete="tel" inputmode="numeric"
+                           onkeydown="if(event.key==='Enter')document.getElementById('login-pwd').focus()">
+                </div>
+            </div>
+
+            <div class="login-field">
+                <label>Senha</label>
+                <div class="login-field-wrap">
+                    <i class="fas fa-lock field-icon"></i>
+                    <input id="login-pwd" type="password" placeholder="Sua senha" autocomplete="current-password"
+                           onkeydown="if(event.key==='Enter')fazerLogin()">
+                    <button class="login-pwd-toggle" type="button" onclick="toggleLoginPwd(this)">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                </div>
+            </div>
+
+            <button class="login-btn" id="login-btn" onclick="fazerLogin()">
+                <i class="fas fa-sign-in-alt"></i> Entrar
+            </button>
+            <p class="login-footer">Sistema preparado para integração com Supabase</p>
+        </div>
+    </div>
+
+    <!-- Overlay mobile sidebar -->
+    <div class="sidebar-overlay" id="sidebar-overlay" onclick="fecharSidebarMobile()"></div>
+
+    <!-- ══════════════════════════════════════════════════════
+         APP PRINCIPAL
+    ══════════════════════════════════════════════════════ -->
+    <div id="main-app" style="display:none; flex-direction:column; height:100vh; overflow:hidden; flex:1;">
+
+        <!-- HEADER SUPERIOR -->
+        <!-- BANNER MODO HISTÓRICO -->
+        <div id="al-banner-historico">
+            <i class="fas fa-eye"></i> MODO HISTÓRICO — Você está visualizando dados de <span id="al-banner-ano"></span>. Edições não são permitidas.
+        </div>
+
+        <header class="top-header">
+            <div class="logo-area">
+                <i class="fas fa-graduation-cap"></i>
+                <div class="logo-text">
+                    <h1>A.V. Leitura+</h1>
+                    <p>Sistema de Acompanhamento de Leitura</p>
+                    <p id="logo-escola" style="font-size: 11px; font-weight: 500;">U.I. Carolina Mesquita de Araújo</p>
+                </div>
+                <!-- al-header-badge removido desta área a pedido -->
+            </div>
+
+            <button class="mobile-menu-btn" id="mobile-menu-btn"
+                    onclick="toggleSidebarMobile()" style="display:none; margin-right:8px;">
+                <i class="fas fa-bars"></i>
+            </button>
+
+            <div class="header-actions">
+                <div class="profile-card" id="profileCard">
+                    <div class="profile-info">
+                        <b>Professor(a)</b>
+                        <span>Anderson Veras</span>
+                        <div class="turma-badge" id="turmaPerfil">2º Ano A</div>
+                    </div>
+                    <div class="profile-photo" id="profilePhotoContainer">
+                        <i class="fas fa-user"></i>
+                    </div>
+                </div>
+
+                <button id="btn-header-import" class="btn-header btn-import" onclick="abrirModalImport()">
+                    <i class="fas fa-cloud-upload-alt"></i> Importar alunos
+                </button>
+                <button id="btn-header-novo" class="btn-header btn-new" onclick="abrirModalAdd()">
+                    <i class="fas fa-plus"></i> Novo aluno
+                </button>
+            </div>
+        </header>
+
+        <!-- CORPO DO APP -->
+        <div class="app-body">
+
+            <!-- ── SIDEBAR ── -->
+            <aside class="sidebar" id="sidebar">
+
+                <!-- Toggle -->
+                <div class="toggle-sidebar" onclick="toggleSidebar()" title="Recolher/Expandir menu">
+                    <i class="fas fa-bars" id="toggleIcon"></i>
+                </div>
+
+                <!-- ── FILTROS ── -->
+                <div class="sb-section-label" id="filtersLabel">Filtros</div>
+
+                <div class="sb-filters" id="al-seletor-grupo">
+
+                    <!-- Ano Letivo -->
+                    <div class="filter-item">
+                        <div class="filter-icon"><i class="fas fa-calendar-alt"></i></div>
+                        <div class="filter-content">
+                            <label>Ano Letivo</label>
+                            <select id="al-seletor" onchange="alTrocarAnoSelecionado(this.value)">
+                                <option value="">Carregando...</option>
+                            </select>
+                            <span id="al-historico-badge" class="sb-badge-historico" style="display:none;">
+                                <i class="fas fa-lock"></i> Somente leitura
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Turma -->
+                    <div class="filter-item">
+                        <div class="filter-icon"><i class="fas fa-graduation-cap"></i></div>
+                        <div class="filter-content">
+                            <label>Turma</label>
+                            <select id="turmaSelect" onchange="atualizarTurma()">
+                                <option value="">Carregando...</option>
+                            </select>
+                            <span id="turno-badge" class="sb-badge-turno" style="display:none;"></span>
+                        </div>
+                    </div>
+
+                    <!-- Período -->
+                    <div class="filter-item">
+                        <div class="filter-icon"><i class="fas fa-layer-group"></i></div>
+                        <div class="filter-content">
+                            <label>Período</label>
+                            <select id="periodo" onchange="carregar(); atualizarRelatorioSeAberto()"></select>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- ── NAVEGAÇÃO ── -->
+                <div class="sb-section-label sb-section-label-nav">Menu</div>
+
+                <nav class="nav-menu">
+                    <button class="nav-item active" id="btn-lancamentos" onclick="trocarAba('lancamentos', event)">
+                        <i class="fas fa-edit"></i> <span class="nav-text">Lançamentos</span>
+                    </button>
+                    <button class="nav-item" id="btn-relatorio" onclick="trocarAba('relatorio', event)">
+                        <i class="fas fa-lightbulb"></i> <span class="nav-text">Recomendações</span>
+                    </button>
+                    <button class="nav-item" id="btn-atividades" onclick="trocarAba('atividades', event)">
+                        <i class="fas fa-tasks"></i> <span class="nav-text">Atividades</span>
+                    </button>
+                    <button class="nav-item" id="btn-rotinas" onclick="trocarAba('rotinas', event)">
+                        <i class="fas fa-calendar-week"></i> <span class="nav-text">Rotinas</span>
+                    </button>
+
+                    <div class="sb-nav-divider"></div>
+
+                    <button class="nav-item" id="btn-comparar" onclick="trocarAba('comparar', event)">
+                        <i class="fas fa-chart-line"></i> <span class="nav-text">Comparar turmas</span>
+                    </button>
+                    <button class="nav-item" id="btn-comparar-alunos" onclick="trocarAba('compararalunos', event)">
+                        <i class="fas fa-user-friends"></i>
+                        <span class="nav-text">Comparar alunos</span>
+                    </button>
+
+                    <div class="sb-nav-divider"></div>
+
+                    <button class="nav-item" id="btn-configuracoes" onclick="trocarAba('configuracoes', event)">
+                        <i class="fas fa-cog"></i> <span class="nav-text">Configurações</span>
+                    </button>
+
+                    <!-- Dark mode toggle -->
+                    <button class="nav-item sb-darkmode-btn" id="btn-darkmode" onclick="sbToggleDarkMode()" title="Modo escuro" style="display:none;">
+                        <i class="fas fa-moon"></i>
+                        <span class="nav-text">Modo escuro</span>
+                        <span class="sb-toggle" id="sb-toggle-dark">
+                            <span class="sb-toggle-thumb"></span>
+                        </span>
+                    </button>
+
+                    <button class="nav-item nav-logout" onclick="mostrarModalSair()">
+                        <i class="fas fa-sign-out-alt"></i> <span class="nav-text">Sair</span>
+                    </button>
+                </nav>
+
+                <!-- Footer -->
+                <div class="sidebar-footer" id="sidebar-footer">
+                    <div class="sf-municipio">
+                        <i class="fas fa-map-marker-alt"></i>
+                        <span id="sf-municipio-txt">Chapadinha-MA</span>
+                    </div>
+                    <div class="sf-ano-letivo" id="sf-ano-letivo-row" style="display:none;">
+                        <i class="fas fa-calendar-alt"></i>
+                        <span id="sf-ano-letivo-txt"></span>
+                    </div>
+                </div>
+
+            </aside>
+
+            <!-- ── CONTEÚDO PRINCIPAL ── -->
+            <div class="main-container">
+
+                <!-- ABA: LANÇAMENTOS -->
+                <main id="aba-lancamentos" class="content-body active">
+                    <div class="summary-grid" id="cards-resumo"></div>
+
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th style="text-align:left; padding-left:15px;">Nome do Aluno</th>
+                                    <th>Reconhece<br>Letras</th>
+                                    <th>Sílabas<br>Simples</th>
+                                    <th>Palavras<br>Simples</th>
+                                    <th>Frases<br>Simples</th>
+                                    <th>Sílabas<br>Complexas</th>
+                                    <th>Palavras e Frases<br>Complexas</th>
+                                    <th>Textos com<br>Fluência</th>
+                                    <th>Soma</th>
+                                    <th>Nível</th>
+                                    <th style="min-width:80px;">
+                                        AÇÕES
+                                        <i class="fas fa-trash-alt"
+                                           style="color:#fff; cursor:pointer; margin-left:5px; font-size:12px;"
+                                           title="Remover todos os alunos do período"
+                                           onclick="removerTodosAlunosPeriodo()"></i>
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody id="tabela-body"></tbody>
+                            <tfoot><tr class="row-avg" id="tabela-footer"></tr></tfoot>
+                        </table>
+                    </div>
+
+                    <div class="bottom-grid">
+                        <div class="insight-card">
+                            <div class="insight-title">
+                                <i class="fas fa-chart-pie"></i> Consolidação: <span id="txt-periodo"></span>
+                            </div>
+                            <p class="insight-subtitle">Distribuição dos alunos por nível de leitura</p>
+                            <!-- Gráfico de barras horizontais por nível -->
+                            <div id="grafico-niveis-barras" style="display:flex;flex-direction:column;gap:7px;margin-top:6px;"></div>
+                            <!-- canvas mantido oculto para compatibilidade -->
+                            <canvas id="grafico-doughnut" style="display:none;"></canvas>
+                        </div>
+
+                        <div class="insight-card" id="card-maior-evolucao">
+                            <div class="insight-title" style="color:var(--success);">
+                                <i class="fas fa-chart-line"></i> Alunos com Maior Evolução
+                            </div>
+                            <ul class="lista-evolucao" id="lista-mais-evolucao"></ul>
+                            <div class="ver-mais-container" id="container-ver-mais-evol"></div>
+                            <div class="card-footer-actions">
+                                <button class="btn-card-action" onclick="trocarAba('compararalunos', event);">
+                                    <i class="fas fa-history"></i> Histórico de Evolução
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="insight-card" id="card-menor-evolucao">
+                            <div class="insight-title" style="color:#f97316;">
+                                <i class="fas fa-bullseye"></i> Alunos que Precisam de Apoio
+                            </div>
+                            <ul class="lista-evolucao" id="lista-menos-evolucao"></ul>
+                            <div class="ver-mais-container" id="container-ver-mais-apoio"></div>
+                            <div class="card-footer-actions">
+                                <button class="btn-card-action" onclick="trocarAba('relatorio', event);">
+                                    <i class="fas fa-lightbulb"></i> Ver Recomendações
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </main>
+
+                <!-- ABA: RELATÓRIO -->
+                <main id="aba-relatorio" class="content-body">
+                    <div class="no-print" style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:10px;">
+                        <div>
+                            <h2 style="color:#1e293b; font-size:20px; margin:0; font-weight:800;">
+                                Relatório Pedagógico &mdash; <span id="rel-periodo-titulo">Diagnóstico</span>
+                            </h2>
+                            <p style="color:#64748b; margin:3px 0 0; font-size:12px;">Visão geral do desempenho da turma</p>
+                        </div>
+                        <div style="display:flex; gap:8px;">
+                            <button class="btn-action"
+                                    style="background:#3b82f6; color:white; border:none; padding:10px 16px; border-radius:8px; cursor:pointer;"
+                                    onclick="window.print()">
+                                <i class="fas fa-print"></i> Imprimir
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="report-grid-new">
+                        <div class="card-info-new">
+                            <div class="icon-bg" style="background:#eff6ff; color:#3b82f6;"><i class="fas fa-users"></i></div>
+                            <div class="content-text">
+                                <span class="label-top">TURMA</span>
+                                <span class="main-val" id="rel-turma">2º ANO "A"</span>
+                                <span class="sub-val" id="rel-ano-letivo">Ano letivo</span>
+                            </div>
+                        </div>
+                        <div class="card-info-new">
+                            <div class="icon-bg" style="background:#eff6ff; color:#3b82f6;"><i class="fas fa-user"></i></div>
+                            <div class="content-text">
+                                <span class="label-top">TOTAL ALUNOS</span>
+                                <span class="main-val" id="rel-total-new">0</span>
+                                <span class="sub-val">Matriculados</span>
+                            </div>
+                        </div>
+                        <div class="card-info-new">
+                            <div class="icon-bg" style="background:#f0fdf4; color:#22c55e;"><i class="fas fa-chart-line"></i></div>
+                            <div class="content-text">
+                                <span class="label-top" style="color:#22c55e;">MÉDIA TURMA</span>
+                                <span class="main-val" id="rel-media-new">0,0</span>
+                                <span class="sub-val">Pontuação média</span>
+                            </div>
+                        </div>
+                        <div class="card-info-new">
+                            <div class="icon-bg" style="background:#f5f3ff; color:#8b5cf6;"><i class="fas fa-star"></i></div>
+                            <div class="content-text">
+                                <span class="label-top" style="color:#8b5cf6;">NÍVEL PREDOMINANTE</span>
+                                <span class="main-val" id="rel-nivel-new">-</span>
+                                <span class="sub-val">Maioria da turma</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="table-container" style="margin-bottom:8px;">
+                        <table style="width:100%;">
+                            <thead>
+                                <tr style="background:var(--primary);">
+                                    <th style="color:#fff; text-align:left; padding:8px 10px; width:20%; font-size:10px;">Nome</th>
+                                    <th style="color:#fff; text-align:center; width:5%; font-size:10px;">Pontos</th>
+                                    <th style="color:#fff; text-align:center; width:12%; font-size:10px;">Nível</th>
+                                    <th style="color:#fff; text-align:left; padding:8px 10px; width:35%; font-size:10px;">Intervenção Pedagógica</th>
+                                    <th style="color:#fff; text-align:right; padding:8px 12px 8px 4px; font-size:10px; min-width:140px;">Atividades Recomendadas</th>
+                                </tr>
+                            </thead>
+                            <tbody id="rel-tabela-body"></tbody>
+                        </table>
+                    </div>
+
+                    <div class="report-bottom-grid">
+                        <div class="report-chart-card">
+                            <h4>Evolução da Média por Período</h4>
+                            <canvas id="rel-chart-line-new"></canvas>
+                        </div>
+                        <div class="report-chart-card">
+                            <h4>Distribuição por Nível (%)</h4>
+                            <canvas id="rel-chart-bar-new"></canvas>
+                        </div>
+                    </div>
+                </main>
+
+                <!-- ABA: ROTINAS -->
+                <main id="aba-rotinas" class="content-body">
+                    <div class="rot-layout">
+
+                        <!-- ── Sidebar: rotinas salvas ── -->
+                        <div class="rot-sidebar">
+                            <div class="rot-sidebar-header">
+                                <div class="rot-sidebar-titulo">
+                                    <i class="fas fa-calendar-week"></i> Rotinas salvas
+                                </div>
+                                <input type="text" class="rot-sidebar-search" id="rot-busca"
+                                       placeholder="Buscar rotina..." oninput="rotFiltrarLista()">
+                            </div>
+                            <div class="rot-lista" id="rot-lista">
+                                <div class="rot-vazia">
+                                    <i class="fas fa-calendar-plus"></i>
+                                    Nenhuma rotina salva<br>Crie sua primeira!
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- ── Editor de rotina ── -->
+                        <div class="rot-main">
+
+                            <!-- Cabeçalho do editor -->
+                            <div class="rot-main-header">
+                                <div class="rot-header-info">
+                                    <div class="rot-header-icon"><i class="fas fa-calendar-week"></i></div>
+                                    <div>
+                                        <h2 id="rot-titulo-header">Nova Rotina Semanal</h2>
+                                        <p id="rot-sub-header">Preencha as atividades de cada horário</p>
+                                    </div>
+                                </div>
+                                <button class="atv-btn-secondary" onclick="rotNova()">
+                                    <i class="fas fa-plus"></i> Nova rotina
+                                </button>
+                            </div>
+
+                            <!-- Filtros / metadados -->
+                            <div class="rot-meta-bar">
+
+                                <!-- Turmas: seleção múltipla -->
+                                <div class="rot-meta-group rot-meta-group-turmas">
+                                    <label><i class="fas fa-graduation-cap"></i> Turmas * <span style="font-size:10px;font-weight:400;color:#94a3b8;">(selecione uma ou mais)</span></label>
+                                    <div class="rot-turmas-check-wrap">
+                                        <div class="rot-turmas-checks" id="rot-turmas-container"
+                                             onchange="rotAtualizarBadgesTurmas();">
+                                            <!-- checkboxes gerados por rotPopularTurmas() -->
+                                        </div>
+                                    </div>
+                                    <div class="rot-turmas-preview" id="rot-turmas-preview">
+                                        <span style="color:#94a3b8;font-size:11px">Nenhuma turma selecionada</span>
+                                    </div>
+                                </div>
+
+                                <div class="rot-meta-group">
+                                    <label><i class="fas fa-user"></i> Professor(a)</label>
+                                    <input type="text" id="rot-professor" placeholder="Preenchido automaticamente" readonly>
+                                </div>
+                                <div class="rot-meta-group">
+                                    <label><i class="fas fa-calendar"></i> De</label>
+                                    <input type="date" id="rot-data-ini">
+                                </div>
+                                <div class="rot-meta-group">
+                                    <label><i class="fas fa-calendar-check"></i> Até</label>
+                                    <input type="date" id="rot-data-fim">
+                                </div>
+                            </div>
+
+                            <!-- Grade de horários -->
+                            <div class="rot-grade-card">
+                                <table class="rot-grade" id="rot-tabela">
+                                    <thead>
+                                        <tr>
+                                            <th class="rot-th-horario">Horário</th>
+                                            <th>Segunda</th>
+                                            <th>Terça</th>
+                                            <th>Quarta</th>
+                                            <th>Quinta</th>
+                                            <th>Sexta</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="rot-tbody"></tbody>
+                                </table>
+                            </div>
+
+                            <!-- Ações -->
+                            <div class="rot-actions">
+                                <button class="atv-btn-secondary" onclick="rotLimpar()">
+                                    <i class="fas fa-eraser"></i> Limpar grade
+                                </button>
+                                <button class="atv-btn-primary" onclick="rotSalvar()">
+                                    <i class="fas fa-save"></i> Salvar rotina
+                                </button>
+                            </div>
+
+                        </div><!-- /rot-main -->
+                    </div><!-- /rot-layout -->
+                </main>
+
+                <!-- MODAL: Visualizar rotina -->
+                <div id="modal-rot-viz" class="modal-overlay" style="display:none;"
+                     onclick="if(event.target===this)rotFecharModal()">
+                    <div class="modal-rot-card">
+
+                        <div class="modal-rot-header">
+                            <div class="modal-rot-header-info">
+                                <div class="modal-rot-icon"><i class="fas fa-calendar-week"></i></div>
+                                <div>
+                                    <div class="modal-rot-escola" id="rviz-escola-nome">–</div>
+                                    <div class="modal-rot-subtitulo">Rotina Semanal de Atividades</div>
+                                    <div class="modal-rot-meta">
+                                        <span class="modal-rot-pill" id="rviz-turma">–</span>
+                                        <span><i class="fas fa-user" style="font-size:9px;color:#a5b4fc;"></i> <span id="rviz-professor">–</span></span>
+                                        <span><i class="fas fa-calendar" style="font-size:9px;color:#a5b4fc;"></i> <span id="rviz-periodo">–</span></span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div style="display:flex;gap:8px;align-items:center;flex-shrink:0;">
+                                <button class="atv-btn-secondary" style="padding:7px 14px;font-size:12px;" onclick="rotDuplicarAtual()">
+                                    <i class="fas fa-copy"></i> Duplicar
+                                </button>
+                                <button class="atv-btn-primary" style="padding:7px 14px;font-size:12px;" onclick="rotImprimirModal()">
+                                    <i class="fas fa-print"></i> Imprimir
+                                </button>
+                                <button class="modal-atv-close" onclick="rotFecharModal()">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="modal-rot-body">
+                            <div id="rviz-grade"></div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <!-- ABA: COMPARAR TURMAS -->
+                <!-- ABA: COMPARAR ALUNOS -->
+                <main id="aba-compararalunos" class="content-body">
+
+                    <!-- Cabeçalho -->
+                    <div class="ca-header">
+                        <div class="ca-title-row">
+                            <div class="ca-title-icon"><i class="fas fa-user-friends"></i></div>
+                            <div>
+                                <h2>Comparar alunos</h2>
+                                <p>Análise individual e comparativa de evolução por turma e período.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- FILTROS DO TOPO — controlam os 4 KPI cards -->
+                    <div class="ca-filter-bar">
+                        <div class="ca-filter-group">
+                            <label><i class="fas fa-graduation-cap"></i> Turma</label>
+                            <select id="ca-turma-select" onchange="caOnTurmaChange()">
+                                <option value="">Todas as turmas</option>
+                            </select>
+                        </div>
+                        <div class="ca-filter-group">
+                            <label><i class="fas fa-layer-group"></i> Período</label>
+                            <select id="ca-periodo-select" onchange="caOnPeriodoChange()">
+                                <option value="">Todos os períodos</option>
+                            </select>
+                        </div>
+                        <div class="ca-filter-info">
+                            <i class="fas fa-info-circle"></i>
+                            Os 4 cards abaixo seguem estes filtros
+                        </div>
+                    </div>
+
+                    <!-- 4 KPI CARDS -->
+                    <div class="ca-kpi-grid" id="ca-kpi-grid">
+                        <div class="ca-kpi-skeleton"></div>
+                        <div class="ca-kpi-skeleton"></div>
+                        <div class="ca-kpi-skeleton"></div>
+                        <div class="ca-kpi-skeleton"></div>
+                    </div>
+
+                    <!-- DIVISOR + SELETOR DE ALUNOS -->
+                    <div class="ca-divider-section">
+                        <div class="ca-divider-label">
+                            <i class="fas fa-chart-line"></i>
+                            Comparação individual — selecione até 5 alunos
+                        </div>
+                    </div>
+
+                    <div class="ca-alunos-bar">
+                        <div class="ca-filter-group ca-filter-alunos" style="flex:1;">
+                            <label>
+                                <i class="fas fa-users"></i> Alunos selecionados
+                                <span class="ca-count-badge" id="ca-count-badge">0/5</span>
+                                <span style="font-size:10px;color:#94a3b8;font-weight:400;margin-left:6px;">
+                                    — lista filtrada pela turma acima
+                                </span>
+                            </label>
+                            <div class="ca-chips-row" id="ca-chips-row">
+                                <button class="ca-btn-add" onclick="caAbrirSeletorAlunos()">
+                                    <i class="fas fa-plus"></i> Adicionar aluno
+                                </button>
+                            </div>
+                        </div>
+                        <button class="ca-btn-clear" onclick="caLimparSelecao()">
+                            <i class="fas fa-redo"></i> Limpar
+                        </button>
+                    </div>
+
+                    <!-- Modal seletor de alunos -->
+                    <div id="ca-modal-alunos" class="ca-modal-overlay" onclick="if(event.target===this)caFecharSeletor()">
+                        <div class="ca-modal-box">
+                            <div class="ca-modal-header">
+                                <strong>Selecionar aluno</strong>
+                                <button onclick="caFecharSeletor()"><i class="fas fa-times"></i></button>
+                            </div>
+                            <input id="ca-busca-aluno" class="ca-modal-search" type="text"
+                                placeholder="Buscar pelo nome..." oninput="caFiltrarListaAlunos()">
+                            <div id="ca-lista-alunos-modal" class="ca-modal-lista"></div>
+                        </div>
+                    </div>
+
+                    <!-- modal-add-aluno-foto movido para fora das abas (ver abaixo do app-body) -->
+
+                    <!-- Estado vazio dos gráficos -->
+                    <div id="ca-empty-state" class="ca-empty">
+                        <div class="ca-empty-icon"><i class="fas fa-chart-line"></i></div>
+                        <div class="ca-empty-title">Selecione alunos para comparar</div>
+                        <p>Adicione até 5 alunos acima para visualizar os gráficos de evolução individual.</p>
+                    </div>
+
+                    <!-- Gráficos (visível só com alunos selecionados) -->
+                    <div id="ca-conteudo" style="display:none;">
+                        <div class="ca-content-row">
+                            <div class="ca-card ca-card-chart">
+                                <div class="ca-card-header">
+                                    <div>
+                                        <div class="ca-card-title"><i class="fas fa-chart-line"></i> Evolução dos alunos</div>
+                                        <p class="ca-card-sub">Soma de habilidades por período avaliativo (máx. 14 pts)</p>
+                                    </div>
+                                </div>
+                                <div class="ca-chart-wrap"><canvas id="ca-chart-evolucao"></canvas></div>
+                                <div class="ca-legenda" id="ca-legenda"></div>
+                            </div>
+                            <div class="ca-card ca-card-table">
+                                <div class="ca-card-header">
+                                    <div class="ca-card-title"><i class="fas fa-table"></i> Desempenho por período</div>
+                                </div>
+                                <div class="ca-table-wrap">
+                                    <table class="ca-table" id="ca-table"></table>
+                                </div>
+                                <div class="ca-table-footer">
+                                    <i class="fas fa-info-circle"></i>
+                                    Evolução = pontos ganhos desde o diagnóstico.
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Info bar -->
+                        <div class="ca-info-bar">
+                            <div class="ca-info-bar-icon"><i class="fas fa-lightbulb"></i></div>
+                            <div class="ca-info-bar-text">
+                                <strong>Como interpretar</strong>
+                                <span>Pontuação baseada nas 7 habilidades (0–2 cada, máx. 14 pts). A evolução mostra quantos pontos o aluno ganhou desde o diagnóstico.</span>
+                            </div>
+                        </div>
+                    </div>
+
+                </main>
+
+                <main id="aba-comparar" class="content-body">
+                    <div class="header-comparar">
+                        <h2><i class="fas fa-chart-line"></i> Comparar turmas</h2>
+                        <p>Análise e compare o desempenho das turmas selecionadas.</p>
+                    </div>
+
+                    <div class="comparar-filters">
+                        <div class="filter-box">
+                            <label>Turmas selecionadas</label>
+                            <div class="turmas-checkboxes" id="turmasCheckboxes"></div>
+                        </div>
+                        <div class="filter-box">
+                            <label>Período</label>
+                            <select id="periodoComparar" class="select-moderno" onchange="atualizarComparacao()">
+                                <option value="TODOS">Todos os períodos</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="kpi-grid">
+                        <div class="kpi-card">
+                            <div class="kpi-icon blue"><i class="fas fa-chart-bar"></i></div>
+                            <div class="kpi-info">
+                                <span>Melhor média</span>
+                                <strong id="kpi-melhor-media-turma">-</strong>
+                                <em class="val" id="kpi-melhor-media-valor">-</em>
+                            </div>
+                        </div>
+                        <div class="kpi-card">
+                            <div class="kpi-icon green"><i class="fas fa-level-up-alt"></i></div>
+                            <div class="kpi-info">
+                                <span>Maior evolução</span>
+                                <strong id="kpi-maior-evolucao-turma">-</strong>
+                                <em class="val" id="kpi-maior-evolucao-valor">-</em>
+                            </div>
+                        </div>
+                        <div class="kpi-card">
+                            <div class="kpi-icon purple"><i class="fas fa-users"></i></div>
+                            <div class="kpi-info">
+                                <span>Avançados</span>
+                                <strong id="kpi-avancados-turma">-</strong>
+                                <em class="val" id="kpi-avancados-valor">-</em>
+                            </div>
+                        </div>
+                        <div class="kpi-card">
+                            <div class="kpi-icon orange"><i class="fas fa-bullseye"></i></div>
+                            <div class="kpi-info">
+                                <span>Atenção</span>
+                                <strong id="kpi-atencao-turma">-</strong>
+                                <em class="val" id="kpi-atencao-valor">-</em>
+                            </div>
+                        </div>
+                        <div class="kpi-card">
+                            <div class="kpi-icon light-blue"><i class="fas fa-user-friends"></i></div>
+                            <div class="kpi-info">
+                                <span>Total Alunos</span>
+                                <em class="val" id="kpi-total-alunos-valor">-</em>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="charts-comparar-grid">
+                        <div class="insight-card comp-chart-tall">
+                            <div class="insight-title">Média geral por turma</div>
+                            <p class="insight-subtitle">Pontuação média no período selecionado</p>
+                            <div class="comp-canvas-wrap"><canvas id="chart-media-comparar"></canvas></div>
+                        </div>
+                        <div class="insight-card comp-chart-tall">
+                            <div class="insight-title">Evolução ao longo do tempo</div>
+                            <p class="insight-subtitle">Média por período bimestral</p>
+                            <div class="comp-canvas-wrap"><canvas id="chart-evolucao-tempo"></canvas></div>
+                        </div>
+                        <div class="insight-card comp-chart-tall" style="overflow:auto;">
+                            <div class="insight-title">Distribuição por nível</div>
+                            <p class="insight-subtitle">% de alunos em cada nível por turma</p>
+                            <div id="heatmap-distribuicao"></div>
+                        </div>
+                    </div>
+
+                    <!-- NOVO GRÁFICO GRANDE: Domínio de habilidades por turma -->
+                    <div class="insight-card comp-chart-hab">
+                        <div class="comp-hab-header">
+                            <div>
+                                <div class="insight-title">
+                                    <i class="fas fa-layer-group" style="color:var(--secondary);margin-right:6px;"></i>
+                                    Domínio de habilidades por turma
+                                </div>
+                                <p class="insight-subtitle">% de alunos que dominam cada habilidade (nota ≥ 2) no período selecionado</p>
+                            </div>
+                        </div>
+                        <div class="comp-hab-canvas-wrap"><canvas id="chart-habilidades-comparar"></canvas></div>
+                    </div>
+
+                </main>
+
+                <!-- ABA: ATIVIDADES -->
+                <main id="aba-atividades" class="content-body">
+                    <div class="atv-layout">
+
+                        <!-- Conteúdo principal -->
+                        <div class="atv-main">
+                            <div class="atv-topbar">
+                                <div>
+                                    <h2 class="atv-title"><i class="fas fa-layer-group"></i> Atividades Pedagógicas</h2>
+                                    <p class="atv-subtitle">Organize e distribua atividades de leitura por nível</p>
+                                </div>
+                                <button class="atv-btn-primary" onclick="atvAbrirFormulario()">
+                                    <i class="fas fa-plus"></i> Nova atividade
+                                </button>
+                            </div>
+
+                            <!-- Busca e filtros -->
+                            <div class="atv-filters-bar">
+                                <div class="atv-search-wrap">
+                                    <i class="fas fa-search atv-search-icon"></i>
+                                    <input id="atv-busca" type="text" class="atv-search-input"
+                                           placeholder="Buscar atividade..." oninput="atvFiltrar()">
+                                </div>
+                                <select id="atv-f-nivel" class="atv-filter-select" onchange="atvFiltrar()">
+                                    <option value="">Todos os níveis</option>
+                                    <option>Pré-leitor 1</option><option>Pré-leitor 2</option>
+                                    <option>Leitor iniciante</option><option>Leitor avançado</option>
+                                    <option>Leitor fluente</option>
+                                </select>
+                                <select id="atv-f-hab" class="atv-filter-select" onchange="atvFiltrar()">
+                                    <option value="">Todas as habilidades</option>
+                                    <option>Reconhece Letras</option><option>Sílabas Simples</option>
+                                    <option>Palavras Simples</option><option>Frases Simples</option>
+                                    <option>Sílabas Complexas</option><option>Palavras e Frases Complexas</option>
+                                    <option>Textos com Fluência</option>
+                                </select>
+                                <select id="atv-f-tipo" class="atv-filter-select" onchange="atvFiltrar()">
+                                    <option value="">Todos os tipos</option>
+                                    <option>PDF</option><option>Jogo</option><option>Vídeo</option>
+                                    <option>Digital</option><option>Word</option><option>Imagem</option>
+                                </select>
+                                <select id="atv-f-ordem" class="atv-filter-select" onchange="atvFiltrar()">
+                                    <option value="recente">Mais recentes</option>
+                                    <option value="az">A → Z</option>
+                                    <option value="nivel">Por nível</option>
+                                </select>
+                                <button class="atv-btn-limpar" onclick="atvLimparFiltros()">
+                                    <i class="fas fa-times"></i> Limpar
+                                </button>
+                                <div class="atv-view-toggle">
+                                    <button id="atv-btn-grid" class="atv-view-btn active" onclick="atvMudarView('grid')" title="Grade">
+                                        <i class="fas fa-th-large"></i>
+                                    </button>
+                                    <button id="atv-btn-list" class="atv-view-btn" onclick="atvMudarView('list')" title="Lista">
+                                        <i class="fas fa-list"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="atv-stats-row" id="atv-stats-row"></div>
+                            <div id="atv-cards-container" class="atv-grid"></div>
+                            <div class="atv-pagination" id="atv-pagination"></div>
+                        </div>
+
+                    </div><!-- /atv-layout -->
+                </main>
+
+                <!-- MODAL: Nova / Editar Atividade -->
+                <div id="modal-atv-form" class="modal-overlay" style="display:none;" onclick="if(event.target===this)atvFecharFormulario()">
+                    <div class="modal-atv-form-card">
+
+                        <!-- Cabeçalho -->
+                        <div class="maf-header">
+                            <div class="maf-header-info">
+                                <div class="maf-header-icon"><i class="fas fa-layer-group"></i></div>
+                                <div>
+                                    <h3 id="atv-panel-titulo">Nova atividade</h3>
+                                    <p>Preencha as informações da atividade pedagógica</p>
+                                </div>
+                            </div>
+                            <button class="modal-atv-close" onclick="atvFecharFormulario()">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+
+                        <input type="hidden" id="atv-form-id">
+
+                        <!-- Corpo em 2 colunas -->
+                        <div class="maf-body">
+
+                            <!-- Coluna esquerda -->
+                            <div class="maf-col">
+
+                                <!-- Seção: Identificação -->
+                                <div class="maf-section">
+                                    <div class="maf-section-title">
+                                        <i class="fas fa-tag"></i> Identificação
+                                    </div>
+                                    <div class="atv-form-group">
+                                        <label>Nome da atividade *</label>
+                                        <input id="atv-form-nome" type="text" placeholder="Ex: Jogo das sílabas simples">
+                                    </div>
+                                    <div class="maf-row-2">
+                                        <div class="atv-form-group">
+                                            <label>Tipo *</label>
+                                            <select id="atv-form-tipo" onchange="atvToggleTipoForm(this.value)">
+                                                <option value="">Selecione...</option>
+                                                <option>PDF</option>
+                                                <option>Jogo</option>
+                                                <option>Vídeo</option>
+                                                <option>Digital</option>
+                                                <option>Word</option>
+                                                <option>Imagem</option>
+                                            </select>
+                                        </div>
+                                        <div class="atv-form-group">
+                                            <label>Descrição</label>
+                                            <input id="atv-form-desc" type="text" placeholder="Objetivo da atividade...">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Seção: Nível -->
+                                <div class="maf-section">
+                                    <div class="maf-section-title">
+                                        <i class="fas fa-signal"></i> Nível de leitura *
+                                        <span class="maf-hint">selecione um ou mais</span>
+                                    </div>
+                                    <div class="atv-chips-group" id="atv-chips-nivel">
+                                        <button type="button" class="atv-chip-sel" data-val="Todos os níveis" onclick="atvToggleChipTodosNiveis(this)">Todos os níveis</button>
+                                        <button type="button" class="atv-chip-sel" data-val="Pré-leitor 1" onclick="atvToggleChip(this)">Pré-leitor 1</button>
+                                        <button type="button" class="atv-chip-sel" data-val="Pré-leitor 2" onclick="atvToggleChip(this)">Pré-leitor 2</button>
+                                        <button type="button" class="atv-chip-sel" data-val="Leitor iniciante" onclick="atvToggleChip(this)">Leitor iniciante</button>
+                                        <button type="button" class="atv-chip-sel" data-val="Leitor avançado" onclick="atvToggleChip(this)">Leitor avançado</button>
+                                        <button type="button" class="atv-chip-sel" data-val="Leitor fluente" onclick="atvToggleChip(this)">Leitor fluente</button>
+                                    </div>
+                                </div>
+
+                                <!-- Seção: Habilidade -->
+                                <div class="maf-section">
+                                    <div class="maf-section-title">
+                                        <i class="fas fa-book-open"></i> Habilidade trabalhada
+                                        <span class="maf-hint">opcional — selecione uma ou mais</span>
+                                    </div>
+                                    <div class="atv-chips-group" id="atv-chips-hab">
+                                        <button type="button" class="atv-chip-sel" data-val="Reconhece Letras" onclick="atvToggleChip(this)">Reconhece Letras</button>
+                                        <button type="button" class="atv-chip-sel" data-val="Sílabas Simples" onclick="atvToggleChip(this)">Sílabas Simples</button>
+                                        <button type="button" class="atv-chip-sel" data-val="Palavras Simples" onclick="atvToggleChip(this)">Palavras Simples</button>
+                                        <button type="button" class="atv-chip-sel" data-val="Frases Simples" onclick="atvToggleChip(this)">Frases Simples</button>
+                                        <button type="button" class="atv-chip-sel" data-val="Sílabas Complexas" onclick="atvToggleChip(this)">Sílabas Complexas</button>
+                                        <button type="button" class="atv-chip-sel" data-val="Palavras e Frases Complexas" onclick="atvToggleChip(this)">Palavras e Frases Complexas</button>
+                                        <button type="button" class="atv-chip-sel" data-val="Textos com Fluência" onclick="atvToggleChip(this)">Textos com Fluência</button>
+                                    </div>
+                                </div>
+
+                            </div><!-- /maf-col -->
+
+                            <!-- Coluna direita -->
+                            <div class="maf-col">
+
+                                <!-- Seção: Arquivo / Link -->
+                                <div class="maf-section">
+                                    <!-- Upload (PDF, Imagem, Word) -->
+                                    <div id="atv-secao-arquivo">
+                                        <div class="maf-section-title">
+                                            <i class="fas fa-paperclip"></i> Arquivo
+                                            <span class="maf-hint">PDF 15MB · Imagem 8MB · Word 10MB</span>
+                                        </div>
+                                        <div class="atv-upload-area" id="atv-upload-area"
+                                             onclick="document.getElementById('atv-file-input').click()">
+                                            <i class="fas fa-cloud-upload-alt" style="font-size:28px;"></i>
+                                            <span id="atv-upload-label">Clique para selecionar ou arraste aqui</span>
+                                            <input type="file" id="atv-file-input" style="display:none"
+                                                   accept=".pdf,.jpg,.png,.doc,.docx" onchange="atvOnFile(this)">
+                                        </div>
+                                        <!-- Arquivo atual (na edição) -->
+                                        <div id="atv-arquivo-atual" style="display:none;margin-top:8px;padding:8px 10px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;font-size:12px;color:#166534;display:flex;align-items:center;gap:8px;">
+                                            <i class="fas fa-check-circle"></i>
+                                            <span id="atv-arquivo-atual-nome">arquivo.pdf</span>
+                                            <button onclick="atvRemoverArquivoAtual()" style="margin-left:auto;background:none;border:none;color:#dc2626;cursor:pointer;font-size:11px;">
+                                                <i class="fas fa-times"></i> Remover
+                                            </button>
+                                        </div>
+                                        <!-- Barra de progresso -->
+                                        <div id="atv-upload-progress" style="display:none;margin-top:8px;">
+                                            <div class="atv-prog-bar">
+                                                <div class="atv-prog-bar-fill"></div>
+                                            </div>
+                                            <span class="atv-prog-txt">Enviando...</span>
+                                        </div>
+                                    </div>
+                                    <!-- Link (Jogo, Vídeo, Digital) -->
+                                    <div id="atv-secao-link" style="display:none;">
+                                        <div class="maf-section-title">
+                                            <i class="fas fa-link"></i> Link da atividade
+                                            <span class="maf-hint">informe a URL completa</span>
+                                        </div>
+                                        <div class="atv-form-group">
+                                            <input id="atv-form-link" type="url" placeholder="https://...">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Seção: Alunos -->
+                                <div class="maf-section">
+                                    <div class="maf-section-title">
+                                        <i class="fas fa-users"></i> Vincular alunos
+                                        <span class="maf-hint">opcional</span>
+                                    </div>
+                                    <div class="atv-alunos-select" id="atv-alunos-select"></div>
+                                    <div class="atv-alunos-chips" id="atv-alunos-chips"></div>
+                                </div>
+
+                            </div><!-- /maf-col -->
+                        </div><!-- /maf-body -->
+
+                        <!-- Rodapé -->
+                        <div class="maf-footer">
+                            <button class="atv-btn-secondary" onclick="atvFecharFormulario()">
+                                <i class="fas fa-times"></i> Cancelar
+                            </button>
+                            <button class="atv-btn-primary" id="atv-btn-salvar" onclick="atvSalvar()">
+                                <i class="fas fa-save"></i> Salvar atividade
+                            </button>
+                        </div>
+
+                    </div>
+                </div><!-- /modal-atv-form -->
+
+                <!-- ABA: CONFIGURAÇÕES -->
+                <main id="aba-configuracoes" class="content-body">
+                    <div class="cfg-layout">
+
+                        <!-- Sidebar de navegação CFG -->
+                        <div class="cfg-sidebar">
+                            <button class="cfg-nav-item active" id="cfg-btn-registrar" onclick="cfgTrocarSecao('registrar',this)">
+                                <i class="fas fa-user-plus"></i> Registrar usuário
+                            </button>
+                            <button class="cfg-nav-item" id="cfg-btn-usuarios" onclick="cfgTrocarSecao('usuarios',this)">
+                                <i class="fas fa-users"></i> Usuários
+                            </button>
+                            <button class="cfg-nav-item" id="cfg-btn-turmas" onclick="cfgTrocarSecao('turmas',this)">
+                                <i class="fas fa-graduation-cap"></i> Turmas
+                            </button>
+                            <button class="cfg-nav-item" id="cfg-btn-anoletivo" onclick="cfgTrocarSecao('anoletivo',this)">
+                                <i class="fas fa-calendar-alt"></i> Ano Letivo
+                            </button>
+                            <button class="cfg-nav-item" id="cfg-btn-sistema" onclick="cfgTrocarSecao('sistema',this)">
+                                <i class="fas fa-sliders-h"></i> Sistema
+                            </button>
+                            <button class="cfg-nav-item" id="cfg-btn-mensagens" onclick="cfgTrocarSecao('mensagens',this)">
+                                <i class="fas fa-comment-dots"></i> Mensagens
+                            </button>
+                            <button class="cfg-nav-item" id="cfg-btn-permissoes" onclick="cfgTrocarSecao('permissoes',this)">
+                                <i class="fas fa-shield-alt"></i> Permissões
+                            </button>
+                        </div>
+
+                        <!-- Conteúdo de configurações -->
+                        <div class="cfg-main">
+
+                            <!-- SEÇÃO: Registrar usuário -->
+                            <section class="cfg-section active" id="cfg-sec-registrar">
+                                <h2 class="cfg-section-title">
+                                    <i class="fas fa-user-plus" style="color:var(--secondary);"></i> Registrar Usuário
+                                </h2>
+                                <p class="cfg-section-sub">Cadastre professores e administradores do sistema</p>
+
+                                <div class="cfg-form-card">
+                                    <h4><i class="fas fa-id-card" style="color:var(--secondary);"></i> Dados do usuário</h4>
+                                    <div class="cfg-form-grid">
+                                        <div class="cfg-form-group full">
+                                            <label>Nome completo *</label>
+                                            <input id="cfg-nome" type="text" placeholder="Ex: Maria da Silva">
+                                        </div>
+
+                                        <div class="cfg-form-group">
+                                            <label>Telefone * <span style="color:#94a3b8;font-size:10px;text-transform:none;">(usado no login)</span></label>
+                                            <input id="cfg-telefone" type="tel" placeholder="Ex: 98991681091" inputmode="numeric" autocomplete="tel">
+                                        </div>
+                                        <div class="cfg-form-group">
+                                            <label>Função *</label>
+                                            <select id="cfg-funcao">
+                                                <option value="">Selecione...</option>
+                                                <option value="professor">Professor(a)</option>
+                                                <option value="admin">Administrador(a)</option>
+                                                <option value="supervisora">Supervisor(a)</option>
+                                                <option value="diretor">Diretor(a)</option>
+                                            </select>
+                                        </div>
+                                        <div class="cfg-form-group">
+                                            <label>Senha *</label>
+                                            <div class="cfg-pwd-wrap">
+                                                <input id="cfg-senha" type="password" placeholder="Mínimo 6 caracteres">
+                                                <button class="cfg-pwd-toggle" onclick="cfgTogglePwd('cfg-senha',this)" type="button">
+                                                    <i class="fas fa-eye"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <div class="cfg-form-group">
+                                            <label>Confirmar senha *</label>
+                                            <div class="cfg-pwd-wrap">
+                                                <input id="cfg-senha2" type="password" placeholder="Repita a senha">
+                                                <button class="cfg-pwd-toggle" onclick="cfgTogglePwd('cfg-senha2',this)" type="button">
+                                                    <i class="fas fa-eye"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <div class="cfg-form-group full">
+                                            <label>Foto do professor</label>
+                                            <div class="cfg-foto-wrap">
+                                                <div class="cfg-foto-circle" id="cfg-foto-circle"
+                                                     onclick="document.getElementById('cfg-foto-input').click()">
+                                                    <i class="fas fa-user" id="cfg-foto-icon"></i>
+                                                    <img id="cfg-foto-preview" src="" style="display:none;">
+                                                    <div class="cfg-foto-overlay"><i class="fas fa-camera"></i>Alterar</div>
+                                                </div>
+                                                <div class="cfg-foto-btns">
+                                                    <button type="button" class="btn-foto-add"
+                                                            onclick="document.getElementById('cfg-foto-input').click()">
+                                                        <i class="fas fa-upload"></i> Adicionar foto
+                                                    </button>
+                                                    <button type="button" class="btn-foto-del" id="cfg-foto-del-btn"
+                                                            onclick="cfgRemoverFoto()" style="display:none">
+                                                        <i class="fas fa-trash"></i> Remover foto
+                                                    </button>
+                                                </div>
+                                                <input type="file" id="cfg-foto-input" accept="image/*"
+                                                       style="display:none" onchange="cfgPreviewFoto(this)">
+                                            </div>
+                                        </div>
+                                        <div class="cfg-form-group full">
+                                            <label>Turmas vinculadas</label>
+                                            <div class="cfg-turmas-check" id="cfg-turmas-check"></div>
+                                        </div>
+                                    </div>
+                                    <div class="cfg-form-actions">
+                                        <button class="atv-btn-secondary" onclick="cfgLimparForm()">Limpar</button>
+                                        <button class="atv-btn-primary" onclick="cfgSalvarUsuario()">
+                                            <i class="fas fa-save"></i> Cadastrar
+                                        </button>
+                                    </div>
+                                </div>
+                            </section>
+
+                            <!-- SEÇÃO: Usuários -->
+                            <section class="cfg-section" id="cfg-sec-usuarios">
+                                <h2 class="cfg-section-title">
+                                    <i class="fas fa-users" style="color:var(--secondary);"></i> Usuários cadastrados
+                                </h2>
+                                <p class="cfg-section-sub">Gerencie os usuários do sistema</p>
+                                <div class="cfg-users-table">
+                                    <table>
+                                        <thead>
+                                            <tr>
+                                                <th style="width:44px;"></th>
+                                                <th>Nome</th>
+                                                <th>Login</th>
+                                                <th>Função</th>
+                                                <th>Turmas</th>
+                                                <th>Último acesso</th>
+                                                <th style="text-align:center;">Ações</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="cfg-users-tbody"></tbody>
+                                    </table>
+                                </div>
+                            </section>
+
+                            <!-- SEÇÃO: Turmas -->
+                            <section class="cfg-section" id="cfg-sec-turmas">
+                                <h2 class="cfg-section-title">
+                                    <i class="fas fa-graduation-cap" style="color:var(--secondary);"></i> Gerenciar Turmas
+                                </h2>
+                                <p class="cfg-section-sub">Adicione e remova turmas do sistema</p>
+                                <div class="cfg-form-card">
+                                    <h4><i class="fas fa-plus-circle" style="color:var(--secondary);"></i> Nova turma</h4>
+                                    <div class="cfg-form-grid">
+                                        <div class="cfg-form-group">
+                                            <label>Nome da turma *</label>
+                                            <input id="cfg-turma-nome" type="text" placeholder="Ex: 3º Ano B">
+                                        </div>
+                                        <div class="cfg-form-group">
+                                            <label>Turno *</label>
+                                            <select id="cfg-turma-turno">
+                                                <option value="Matutino">Matutino</option>
+                                                <option value="Vespertino">Vespertino</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="cfg-form-group" style="margin-top:10px;">
+                                        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-weight:500;">
+                                            <input type="checkbox" id="cfg-turma-oculta" style="width:16px;height:16px;accent-color:var(--secondary);">
+                                            <span>Ocultar turma <span style="font-size:11px;color:#94a3b8;font-weight:400;">(visível só para admin e professor vinculado)</span></span>
+                                        </label>
+                                    </div>
+                                    <div class="cfg-form-actions">
+                                        <button class="atv-btn-primary" onclick="cfgAdicionarTurma()">
+                                            <i class="fas fa-plus"></i> Adicionar turma
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="cfg-users-table">
+                                    <table>
+                                        <thead>
+                                            <tr>
+                                                <th>Turma</th>
+                                                <th>Alunos cadastrados</th>
+                                                <th style="text-align:center;">Visibilidade</th>
+                                                <th style="text-align:center;">Ações</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="cfg-turmas-tbody"></tbody>
+                                    </table>
+                                </div>
+                            </section>
+
+                            <!-- SEÇÃO: Ano Letivo -->
+                            <section class="cfg-section" id="cfg-sec-anoletivo">
+                                <h2 class="cfg-section-title">
+                                    <i class="fas fa-calendar-alt" style="color:var(--secondary);"></i> Anos Letivos
+                                </h2>
+                                <p class="cfg-section-sub">Gerencie os anos letivos do sistema. O ano marcado como ativo é o padrão para todos os usuários.</p>
+
+                                <!-- Card: criar novo ano -->
+                                <div class="cfg-form-card" id="al-form-card">
+                                    <h4><i class="fas fa-plus-circle" style="color:var(--secondary);"></i> Criar novo ano letivo</h4>
+                                    <div class="cfg-form-grid">
+                                        <div class="cfg-form-group">
+                                            <label>Ano <span style="color:#ef4444">*</span></label>
+                                            <input id="al-ano" type="number" placeholder="Ex: 2026" min="2020" max="2040">
+                                        </div>
+                                        <div class="cfg-form-group">
+                                            <label>Descrição</label>
+                                            <input id="al-descricao" type="text" placeholder="Ex: Ano Letivo 2026">
+                                        </div>
+                                        <div class="cfg-form-group">
+                                            <label>Data início</label>
+                                            <input id="al-data-ini" type="date">
+                                        </div>
+                                        <div class="cfg-form-group">
+                                            <label>Data fim</label>
+                                            <input id="al-data-fim" type="date">
+                                        </div>
+                                    </div>
+                                    <div class="cfg-form-actions" style="margin-top:12px;">
+                                        <button class="atv-btn-primary" onclick="alCriarAno()">
+                                            <i class="fas fa-plus"></i> Criar ano letivo
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- Lista de anos -->
+                                <div class="cfg-form-card" style="margin-top:14px;">
+                                    <h4><i class="fas fa-list" style="color:var(--secondary);"></i> Anos cadastrados</h4>
+                                    <p style="font-size:12px;color:#64748b;margin:6px 0 14px;">Clique no radio de um ano para ativá-lo como padrão do sistema.</p>
+                                    <div id="al-lista">
+                                        <div class="al-loading"><i class="fas fa-spinner fa-spin"></i> Carregando...</div>
+                                    </div>
+                                </div>
+                            </section>
+
+                            <!-- SEÇÃO: Sistema -->
+                            <section class="cfg-section" id="cfg-sec-sistema">
+                                <h2 class="cfg-section-title">
+                                    <i class="fas fa-sliders-h" style="color:var(--secondary);"></i> Configurações do sistema
+                                </h2>
+                                <p class="cfg-section-sub">Edite as informações exibidas na barra superior e no rodapé da navegação</p>
+
+                                <div class="sys-preview-bar">
+                                    <i class="fas fa-graduation-cap spb-icon"></i>
+                                    <div>
+                                        <div class="sys-preview-title" id="spb-titulo">A.V. Leitura+</div>
+                                        <div class="sys-preview-sub" id="spb-sub">Sistema de Acompanhamento de Leitura</div>
+                                        <div class="sys-preview-school" id="spb-school">U.I. Carolina Mesquita de Araújo</div>
+                                    </div>
+                                </div>
+
+                                <div class="cfg-form-card">
+                                    <h4><i class="fas fa-heading" style="color:var(--secondary);"></i> Barra superior</h4>
+                                    <div class="cfg-form-grid">
+                                        <div class="cfg-form-group full">
+                                            <label>Título do sistema (ex: A.V. Leitura+)</label>
+                                            <input id="sys-titulo" type="text" placeholder="A.V. Leitura+" oninput="sysAtualizarPrevia()">
+                                        </div>
+                                        <div class="cfg-form-group full">
+                                            <label>Subtítulo (ex: Sistema de Acompanhamento de Leitura)</label>
+                                            <input id="sys-sub" type="text" placeholder="Sistema de Acompanhamento de Leitura" oninput="sysAtualizarPrevia()">
+                                        </div>
+                                        <div class="cfg-form-group full">
+                                            <label>Nome da escola</label>
+                                            <input id="sys-escola" type="text" placeholder="U.I. Carolina Mesquita de Araújo" oninput="sysAtualizarPrevia()">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="cfg-form-card">
+                                    <h4><i class="fas fa-map-marker-alt" style="color:var(--secondary);"></i> Informações do rodapé</h4>
+                                    <div class="cfg-form-grid">
+                                        <div class="cfg-form-group">
+                                            <label>Município</label>
+                                            <input id="sys-municipio" type="text" placeholder="Chapadinha-MA" oninput="sysAtualizarPrevia()">
+                                        </div>
+                                        <div class="cfg-form-group">
+                                            <label>Ano letivo</label>
+                                            <input id="sys-ano" type="text" placeholder="2026" oninput="sysAtualizarPrevia()">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="cfg-form-actions" style="margin-top:0;">
+                                    <button class="atv-btn-secondary" onclick="sysCarregarDados()">
+                                        <i class="fas fa-undo"></i> Restaurar
+                                    </button>
+                                    <button class="atv-btn-primary" onclick="sysSalvar()">
+                                        <i class="fas fa-save"></i> Salvar e aplicar
+                                    </button>
+                                </div>
+                            </section>
+
+                            <!-- SEÇÃO: Mensagens de Boas-vindas -->
+                            <section class="cfg-section" id="cfg-sec-mensagens">
+                                <h2 class="cfg-section-title">
+                                    <i class="fas fa-comment-dots" style="color:var(--secondary);"></i> Mensagens de Boas-vindas
+                                </h2>
+                                <p class="cfg-section-sub">Gerencie as mensagens exibidas na tela de boas-vindas após o login</p>
+
+                                <!-- Sub-abas internas da seção -->
+                                <div class="msg-group-tabs" style="margin-bottom:24px;">
+                                    <button class="msg-group-tab active" id="msg-tab-mensagens" onclick="msgTrocarSubaba('mensagens',this)">
+                                        <i class="fas fa-list"></i> Mensagens
+                                    </button>
+                                    <button class="msg-group-tab" id="msg-tab-padrao" onclick="msgTrocarSubaba('padrao',this)">
+                                        <i class="fas fa-bullhorn"></i> Aviso / Evento
+                                    </button>
+                                    <button class="msg-group-tab tab-raras" id="msg-tab-ranking" onclick="msgTrocarSubaba('ranking',this)">
+                                        <i class="fas fa-trophy"></i> Ranking de Acessos
+                                    </button>
+
+                                </div>
+
+                                <!-- ── SUB-ABA: MENSAGENS ── -->
+                                <div id="msg-subaba-mensagens">
+
+                                    <!-- Estatísticas simplificadas -->
+                                    <div class="msg-stats-grid" style="grid-template-columns: repeat(3, 1fr);" id="msg-stats-grid">
+                                        <div class="msg-stat-card">
+                                            <div class="msg-stat-num" id="msg-stat-total">–</div>
+                                            <div class="msg-stat-label">Total</div>
+                                        </div>
+                                        <div class="msg-stat-card">
+                                            <div class="msg-stat-num" id="msg-stat-ativas">–</div>
+                                            <div class="msg-stat-label">Ativas</div>
+                                        </div>
+                                        <div class="msg-stat-card">
+                                            <div class="msg-stat-num" id="msg-stat-exib">–</div>
+                                            <div class="msg-stat-label">Exibições totais</div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Abas de grupos -->
+                                    <div class="msg-group-tabs">
+                                        <button class="msg-group-tab active" onclick="msgTrocarGrupo('manha',this)">☀️ Manhã</button>
+                                        <button class="msg-group-tab" onclick="msgTrocarGrupo('tarde',this)">🌤️ Tarde</button>
+                                        <button class="msg-group-tab" onclick="msgTrocarGrupo('noite',this)">🌙 Noite</button>
+                                        <button class="msg-group-tab" onclick="msgTrocarGrupo('cedo',this)">☕ Cedo</button>
+                                        <button class="msg-group-tab" onclick="msgTrocarGrupo('madrugada',this)">🌑 Madrugada</button>
+                                        <button class="msg-group-tab tab-raras" onclick="msgTrocarGrupo('raras',this)">🏆 Raras (19%)</button>
+                                        <button class="msg-group-tab tab-lendarias" onclick="msgTrocarGrupo('lendarias',this)">👑 Lendárias (1%)</button>
+                                    </div>
+
+                                    <!-- Lista de mensagens -->
+                                    <div class="cfg-form-card" style="padding: 16px 20px;">
+                                        <div class="msg-lista" id="msg-lista"></div>
+                                        <div class="msg-add-form">
+                                            <textarea id="msg-nova-txt" class="msg-add-input" rows="2" placeholder="Digite a nova mensagem..."></textarea>
+                                            <button class="msg-add-btn" onclick="msgAdicionar()">
+                                                <i class="fas fa-plus"></i> Adicionar
+                                            </button>
+                                        </div>
+                                        <div class="msg-section-footer">
+                                            <button class="msg-reset-btn" onclick="msgRestaurarPadrao()">
+                                                <i class="fas fa-undo"></i> Restaurar padrão do grupo
+                                            </button>
+                                            <button class="msg-reset-btn" onclick="msgZerarContadores()" style="color:#64748b;">
+                                                <i class="fas fa-sync-alt"></i> Zerar contadores do grupo
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- ── SUB-ABA: AVISO / EVENTO ── -->
+                                <div id="msg-subaba-padrao" style="display:none;">
+                                    <div class="cfg-form-card">
+                                        <h4><i class="fas fa-bullhorn" style="color:var(--secondary);"></i> Mensagem de aviso / evento</h4>
+                                        <p style="font-size:12px;color:#64748b;margin:0 0 16px;">Quando ativa, esta mensagem aparece para todos os usuários com prioridade máxima, substituindo o sorteio normal.</p>
+
+                                        <div class="cfg-form-grid">
+                                            <div class="cfg-form-group full">
+                                                <label>Texto da mensagem</label>
+                                                <textarea id="msg-padrao-txt" class="msg-add-input" rows="3" placeholder="Ex: Feliz Dia dos Professores! 🎉"></textarea>
+                                            </div>
+                                            <div class="cfg-form-group">
+                                                <label>Data de início (opcional)</label>
+                                                <input type="date" id="msg-padrao-inicio" class="cfg-input">
+                                            </div>
+                                            <div class="cfg-form-group">
+                                                <label>Data de fim (opcional)</label>
+                                                <input type="date" id="msg-padrao-fim" class="cfg-input">
+                                            </div>
+                                            <div class="cfg-form-group full" style="display:flex;align-items:center;gap:10px;margin-top:4px;">
+                                                <input type="checkbox" id="msg-padrao-umavez" checked style="width:16px;height:16px;cursor:pointer;">
+                                                <label for="msg-padrao-umavez" style="font-size:13px;cursor:pointer;margin:0;">
+                                                    Exibir apenas uma vez por usuário
+                                                </label>
+                                            </div>
+                                            <div class="cfg-form-group full" style="display:flex;align-items:center;gap:10px;">
+                                                <input type="checkbox" id="msg-padrao-ativo" style="width:16px;height:16px;cursor:pointer;">
+                                                <label for="msg-padrao-ativo" style="font-size:13px;font-weight:700;color:#1d4ed8;cursor:pointer;margin:0;">
+                                                    Mensagem ativa (visível para todos)
+                                                </label>
+                                            </div>
+                                        </div>
+
+                                        <div class="cfg-form-actions" style="margin-top:16px;">
+                                            <button class="atv-btn-secondary" onclick="msgDescartarPadrao()" style="background:#fee2e2;color:#b91c1c;border-color:#fca5a5;">
+                                                <i class="fas fa-trash-alt"></i> Descartar
+                                            </button>
+                                            <button class="atv-btn-primary" onclick="msgSalvarPadrao()">
+                                                <i class="fas fa-save"></i> Salvar aviso
+                                            </button>
+                                        </div>
+
+                                        <!-- Preview do status atual -->
+                                        <div id="msg-padrao-status" style="margin-top:14px;padding:10px 14px;border-radius:10px;font-size:12px;display:none;"></div>
+                                    </div>
+                                </div>
+
+                                <!-- ── SUB-ABA: RANKING ── -->
+                                <div id="msg-subaba-ranking" style="display:none;">
+                                    <div class="cfg-form-card" style="padding:16px 20px;">
+                                        <h4 style="margin-bottom:16px;"><i class="fas fa-trophy" style="color:#d97706;"></i> Usuários que mais acessam o sistema</h4>
+                                        <div id="msg-ranking-lista">
+                                            <p style="color:#94a3b8;font-size:13px;">Nenhum acesso registrado ainda.</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                                            </section>
+
+                            <!-- SEÇÃO: Permissões -->
+                            <section class="cfg-section" id="cfg-sec-permissoes">
+                                <h2 class="cfg-section-title">
+                                    <i class="fas fa-shield-alt"></i> Permissões
+                                </h2>
+                                <p class="cfg-section-sub">Controle o que cada perfil pode visualizar no sistema.</p>
+
+                                <!-- Visibilidade das Rotinas -->
+                                <div class="cfg-form-card">
+                                    <h4><i class="fas fa-calendar-week" style="color:var(--secondary);"></i> Rotinas</h4>
+                                    <div style="display:flex;flex-direction:column;gap:14px;margin-top:10px;">
+
+                                        <label style="display:flex;align-items:flex-start;gap:12px;cursor:pointer;padding:14px 16px;border-radius:10px;border:1px solid #e2e8f0;background:#f8fafc;">
+                                            <input type="checkbox" id="perm-rotinas-gestao"
+                                                   style="width:17px;height:17px;margin-top:2px;accent-color:var(--secondary);flex-shrink:0;"
+                                                   onchange="permSalvar()">
+                                            <div>
+                                                <div style="font-weight:600;font-size:14px;color:#1e293b;">
+                                                    Permitir que Diretores e Supervisores visualizem rotinas de professores
+                                                </div>
+                                                <div style="font-size:12px;color:#64748b;margin-top:4px;line-height:1.5;">
+                                                    Quando ativado: Diretores e Supervisores veem todas as rotinas.<br>
+                                                    Quando desativado: veem apenas as próprias rotinas.
+                                                    Administradores sempre veem tudo. Regras de edição não são afetadas.
+                                                </div>
+                                            </div>
+                                        </label>
+
+                                        <!-- Modo escuro -->
+                                        <label style="display:flex;align-items:flex-start;gap:12px;cursor:pointer;padding:14px 16px;border-radius:10px;border:1px solid #e2e8f0;background:#f8fafc;">
+                                            <input type="checkbox" id="perm-dark-mode"
+                                                   style="width:17px;height:17px;margin-top:2px;accent-color:var(--secondary);flex-shrink:0;"
+                                                   onchange="permSalvar()">
+                                            <div>
+                                                <div style="font-weight:600;font-size:14px;color:#1e293b;">
+                                                    Habilitar Modo Escuro para todos os usuários
+                                                </div>
+                                                <div style="font-size:12px;color:#64748b;margin-top:4px;line-height:1.5;">
+                                                    Quando ativado: o botão de Modo Escuro aparece na sidebar para todos.<br>
+                                                    Quando desativado: o botão fica visível apenas para Administradores.
+                                                </div>
+                                            </div>
+                                        </label>
+
+                                        <!-- Estrutura preparada para novas permissões futuras -->
+
+                                    </div>
+                                </div>
+
+                                <div style="margin-top:18px;">
+                                    <button class="atv-btn-primary" onclick="permSalvar()">
+                                        <i class="fas fa-save"></i> Salvar permissões
+                                    </button>
+                                </div>
+                            </section>
+
+                        </div><!-- /cfg-main -->
+                    </div><!-- /cfg-layout -->
+                </main>
+
+            </div><!-- /main-container -->
+        </div><!-- /app-body -->
+
+    <!-- ══════════════════════════════════════════════════════════
+         MODAL: ADICIONAR / EDITAR ALUNO (global — fora das abas)
+         Posicionado aqui para não ser bloqueado por display:none
+         de nenhuma aba parent.
+    ══════════════════════════════════════════════════════════ -->
+    <div id="modal-add-aluno-foto" class="ca-modal-overlay" onclick="if(event.target===this)fecharModalAddAlunoFoto()">
+        <div class="ca-modal-box" style="width:420px;">
+            <div class="ca-modal-header">
+                <strong><i class="fas fa-user-plus" style="color:#6366f1;margin-right:6px;"></i><span id="modal-add-aluno-titulo">Novo Aluno</span></strong>
+                <button onclick="fecharModalAddAlunoFoto()"><i class="fas fa-times"></i></button>
+            </div>
+            <div style="padding:16px 18px;display:flex;flex-direction:column;gap:14px;">
+                <!-- Nome primeiro (mais natural) -->
+                <div class="ca-form-group">
+                    <label>Nome completo <span style="color:#ef4444">*</span></label>
+                    <input id="ca-novo-aluno-nome" type="text" placeholder="Ex: João Pedro Silva"
+                        onkeydown="if(event.key==='Enter')salvarNovoAlunoComFoto()">
+                </div>
+                <!-- Foto abaixo do nome -->
+                <div class="ca-foto-upload-area" onclick="document.getElementById('ca-foto-input').click()" style="cursor:pointer;">
+                    <div class="ca-foto-preview" id="ca-foto-preview">
+                        <i class="fas fa-camera"></i>
+                    </div>
+                    <div class="ca-foto-upload-text">
+                        <strong>Foto do aluno</strong>
+                        <span>Opcional · JPG, PNG, WEBP · máx 2 MB</span>
+                    </div>
+                    <input type="file" id="ca-foto-input" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp" style="display:none" onchange="caPreviewFoto(this)">
+                </div>
+                <div class="ca-modal-btns">
+                    <button class="ca-btn-clear" onclick="fecharModalAddAlunoFoto()">Cancelar</button>
+                    <button class="ca-btn-salvar" onclick="salvarNovoAlunoComFoto()">
+                        <i class="fas fa-check"></i> Adicionar aluno
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    </div><!-- /main-app -->
+
+    <!-- ══════════════════════════════════════════════════════
+         MODAL: EDITAR ALUNO (foto + remover)
+    ══════════════════════════════════════════════════════ -->
+    <div id="modal-editar-aluno" class="ca-modal-overlay" onclick="if(event.target===this)fecharModalEditarAluno()">
+        <div class="ca-modal-box" style="width:420px;">
+            <div class="ca-modal-header">
+                <strong><i class="fas fa-pencil-alt" style="color:#6366f1;margin-right:6px;"></i>Editar aluno</strong>
+                <button onclick="fecharModalEditarAluno()"><i class="fas fa-times"></i></button>
+            </div>
+            <div style="padding:16px 18px;display:flex;flex-direction:column;gap:14px;">
+
+                <!-- Nome (apenas exibição) -->
+                <div class="ca-form-group">
+                    <label>Nome do aluno</label>
+                    <div style="background:var(--bg-secundario);border:1px solid var(--borda);border-radius:8px;padding:9px 12px;font-size:13px;font-weight:600;color:var(--texto-primario);display:flex;align-items:center;gap:8px;">
+                        <i class="fas fa-user" style="color:var(--cor-primaria);font-size:12px;"></i>
+                        <span id="ea-nome-aluno" style="flex:1;"></span>
+                        <span style="font-size:10px;color:var(--texto-desabilitado);font-weight:400;">Não editável</span>
+                    </div>
+                </div>
+
+                <!-- Foto -->
+                <div class="ca-form-group">
+                    <label>Foto do aluno</label>
+                    <div style="display:flex;align-items:center;gap:14px;">
+                        <!-- Preview circular -->
+                        <div id="ea-foto-preview" onclick="document.getElementById('ea-foto-input').click()"
+                             style="width:72px;height:72px;min-width:72px;border-radius:50%;background:var(--bg-secundario);border:2px dashed var(--borda);display:flex;align-items:center;justify-content:center;cursor:pointer;overflow:hidden;color:var(--texto-desabilitado);font-size:22px;transition:border-color .2s;"
+                             onmouseover="this.style.borderColor='var(--cor-primaria)'"
+                             onmouseout="this.style.borderColor='var(--borda)'">
+                            <i class="fas fa-user"></i>
+                        </div>
+                        <input type="file" id="ea-foto-input" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp" style="display:none" onchange="eaPreviewFoto(this)">
+                        <!-- Botões de ação da foto -->
+                        <div style="display:flex;flex-direction:column;gap:7px;flex:1;">
+                            <button onclick="document.getElementById('ea-foto-input').click()"
+                                    style="display:flex;align-items:center;gap:7px;padding:8px 12px;border:1px solid var(--borda);border-radius:8px;background:var(--bg-card);color:var(--texto-primario);font-size:12px;font-weight:600;cursor:pointer;transition:all .2s;"
+                                    onmouseover="this.style.borderColor='var(--cor-primaria)';this.style.color='var(--cor-primaria)'"
+                                    onmouseout="this.style.borderColor='var(--borda)';this.style.color='var(--texto-primario)'">
+                                <i class="fas fa-camera" style="font-size:11px;"></i> Selecionar foto
+                            </button>
+                            <button onclick="eaRemoverFoto()"
+                                    style="display:flex;align-items:center;gap:7px;padding:8px 12px;border:1px solid var(--borda);border-radius:8px;background:var(--bg-card);color:var(--cor-aviso);font-size:12px;font-weight:600;cursor:pointer;transition:all .2s;"
+                                    onmouseover="this.style.borderColor='var(--cor-aviso)';this.style.background='#fff7ed'"
+                                    onmouseout="this.style.borderColor='var(--borda)';this.style.background='var(--bg-card)'">
+                                <i class="fas fa-times-circle" style="font-size:11px;"></i> Remover foto
+                            </button>
+                        </div>
+                    </div>
+                    <span style="font-size:10px;color:var(--texto-desabilitado);">Clique na foto ou no botão para trocar · JPG, PNG, WEBP · máx 2 MB</span>
+                </div>
+
+                <!-- Divisor -->
+                <div style="border-top:1px solid var(--borda);margin:0 -2px;"></div>
+
+                <!-- Botões principais -->
+                <div style="display:flex;flex-direction:column;gap:8px;">
+                    <!-- Salvar foto -->
+                    <div style="display:flex;gap:10px;justify-content:flex-end;">
+                        <button class="ca-btn-clear" onclick="fecharModalEditarAluno()">Cancelar</button>
+                        <button class="ca-btn-salvar" onclick="eaSalvarFoto()">
+                            <i class="fas fa-check"></i> Salvar foto
+                        </button>
+                    </div>
+                    <!-- Remover aluno (destaque vermelho) -->
+                    <div style="border-top:1px solid var(--borda);padding-top:10px;">
+                        <button onclick="eaRemoverAluno()"
+                                style="width:100%;display:flex;align-items:center;justify-content:center;gap:8px;padding:10px 16px;border:1.5px solid var(--cor-perigo);border-radius:8px;background:transparent;color:var(--cor-perigo);font-size:12px;font-weight:700;cursor:pointer;transition:all .2s;letter-spacing:.3px;"
+                                onmouseover="this.style.background='#fef2f2'"
+                                onmouseout="this.style.background='transparent'">
+                            <i class="fas fa-user-times"></i> Remover aluno
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════
+         MODAL: VISUALIZAÇÃO DE ATIVIDADE
+    ══════════════════════════════════════════════════════ -->
+    <div id="modal-atv-viz" class="modal-overlay">
+        <div class="modal-atv-card modal-atv-card-viz">
+            <div class="modal-atv-card-header">
+                <h3 id="mviz-titulo">&ndash;</h3>
+                <div style="display:flex;gap:8px;align-items:center;">
+                    <button id="mviz-btn-imprimir" class="atv-btn-secondary" style="padding:5px 12px;font-size:11px;"
+                            onclick="atvImprimirAtividade(currentVizId)">
+                        <i class="fas fa-print"></i> Imprimir
+                    </button>
+                    <button class="modal-atv-close"
+                            onclick="document.getElementById('modal-atv-viz').style.display='none'">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="modal-atv-card-body" style="padding:0;">
+                <div class="mviz-layout">
+                    <!-- Coluna esquerda: informações -->
+                    <div class="mviz-info-col">
+                        <div id="mviz-tipo-badge" style="margin-bottom:14px;"></div>
+                        <div class="mviz-fields">
+                            <div class="mviz-field"><span class="mviz-lbl">Nível</span><span id="mviz-nivel">&ndash;</span></div>
+                            <div class="mviz-field"><span class="mviz-lbl">Habilidade</span><span id="mviz-hab">&ndash;</span></div>
+                            <div class="mviz-field"><span class="mviz-lbl">Autor</span><span id="mviz-autor">&ndash;</span></div>
+                            <div class="mviz-field"><span class="mviz-lbl">Data</span><span id="mviz-data">&ndash;</span></div>
+                        </div>
+                        <div class="mviz-desc-label">Descrição</div>
+                        <div class="mviz-desc-box" id="mviz-desc">&ndash;</div>
+                        <div id="mviz-alunos-wrap" style="display:none; margin-top:12px;">
+                            <div class="mviz-desc-label"><i class="fas fa-users"></i> Alunos vinculados</div>
+                            <div id="mviz-alunos-chips" style="display:flex; flex-wrap:wrap; gap:6px; margin-top:6px;"></div>
+                        </div>
+                    </div>
+                    <!-- Coluna direita: pré-visualização -->
+                    <div class="mviz-preview-col">
+                        <div class="mviz-preview-header">
+                            <span id="mviz-preview-label">Pré-visualização</span>
+                            <div class="mviz-pdf-nav" id="mviz-pdf-nav" style="display:none;">
+                                <button onclick="mvizPdfPrev()" id="mviz-pdf-prev" class="mviz-nav-btn">
+                                    <i class="fas fa-chevron-left"></i>
+                                </button>
+                                <span id="mviz-pdf-pagina">1 / 1</span>
+                                <button onclick="mvizPdfNext()" id="mviz-pdf-next" class="mviz-nav-btn">
+                                    <i class="fas fa-chevron-right"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="mviz-preview-area" id="mviz-preview-area">
+                            <div class="mviz-no-preview">
+                                <i class="fas fa-file-alt"></i>
+                                <p>Nenhum arquivo anexado</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════
+         MODAL: GENÉRICO (confirmação / aviso / input)
+    ══════════════════════════════════════════════════════ -->
+    <div id="modal" class="modal-overlay">
+        <div class="modal-content">
+            <h2 id="modal-titulo"></h2>
+            <p id="modal-desc" style="margin:10px 0; font-size:14px; color:#475569;"></p>
+            <input type="text" id="modal-input"
+                   style="width:100%; padding:10px; margin-top:10px; border-radius:8px; border:1px solid #ddd;">
+            <div class="modal-btns" id="modal-btns">
+                <button id="btn-modal-confirm" style="background:var(--secondary); color:white;">Confirmar</button>
+                <button id="btn-modal-cancel" onclick="fecharModal()" style="background:#f1f5f9; color:#64748b;">Cancelar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de saída -->
+    <div id="modal-sair" class="modal-overlay" style="display:none;">
+        <div class="modal-sair-box">
+            <div class="modal-sair-icon"><i class="fas fa-sign-out-alt"></i></div>
+            <h3 class="modal-sair-titulo">Sair do sistema?</h3>
+            <p class="modal-sair-msg">Deseja realmente encerrar sua sessão?</p>
+            <div class="modal-sair-btns">
+                <button class="modal-sair-btn-cancel" onclick="fecharModalSair()">Cancelar</button>
+                <button class="modal-sair-btn-confirm" onclick="fazerLogout()">
+                    <i class="fas fa-sign-out-alt"></i> Sair
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Área de impressão de atividade (oculto) -->
+    <div id="atv-print-area" style="display:none;"></div>
+
+    <!-- ══════════════════════════════════════════════════════
+         SCRIPTS DO SISTEMA
+    ══════════════════════════════════════════════════════ -->
+    <script src="js/notifications.js"></script>
+    <script src="js/supabase.js"></script>
+    <script src="js/app.js"></script>
+    <script src="js/relatorios.js"></script>
+    <script src="js/atividades.js"></script>
+
+    <!-- ── LOADING GLOBAL ── -->
+    <!-- ══════════════════════════════════════════════════════════
+         TELA DE CARREGAMENTO PERSONALIZADA
+         ══════════════════════════════════════════════════════════ -->
+    <div id="av-loading" aria-live="polite" aria-label="Carregando">
+
+        <!-- Fundo decorativo -->
+        <div class="avl-bg-blob avl-blob-1"></div>
+        <div class="avl-bg-blob avl-blob-2"></div>
+        <div class="avl-bg-blob avl-blob-3"></div>
+
+        <div class="avl-card">
+
+            <!-- Saudação principal -->
+            <div class="avl-greeting-block">
+                <div class="avl-ola" id="avl-saudacao">OLÁ!</div>
+                <div class="avl-periodo-linha">
+                    <span id="avl-periodo-txt">BOM DIA</span>
+                    <span id="avl-periodo-emoji" class="avl-emoji-grande">☀️</span>
+                </div>
+            </div>
+
+            <!-- Frase do dia -->
+            <div class="avl-frase-box" id="avl-frase-box">
+                <span class="avl-frase-ico" id="avl-frase-ico">💡</span>
+                <p id="avl-frase-txt"></p>
+            </div>
+
+            <!-- Progresso -->
+            <div class="avl-progress-area">
+                <div class="avl-progress-topo">
+                    <span class="avl-loading-label" id="av-loading-txt">Preparando informações...</span>
+                    <span class="avl-pct" id="avl-pct">0%</span>
+                </div>
+                <div class="avl-progress-track">
+                    <div class="avl-progress-bar" id="avl-progress-bar"></div>
+                    <div class="avl-progress-shine"></div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script src="js/rotinas.js"></script>
+    <script src="js/configuracoes.js"></script>
+
+</body>
+</html>

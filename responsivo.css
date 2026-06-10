@@ -1,0 +1,407 @@
+/* ════════════════════════════════════════════════════════════════
+   responsivo.css — Media Queries e Impressão
+   A.V. Leitura+ — Sistema de Habilidades
+   Estratégia: desktop-first adaptativo
+   Breakpoints: 1920 / 1440 / 1200 / 900 / 768 / 480 / 360
+════════════════════════════════════════════════════════════════ */
+
+/* ══════════════════════════════════════════════════════════════
+   TELAS GRANDES — 2K e Ultrawide (≥ 1920px)
+══════════════════════════════════════════════════════════════ */
+@media (min-width: 1920px) {
+    /* Limita crescimento do conteúdo — espaço extra vai para margens */
+    .main-container {
+        max-width: 1600px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    /* Sidebar levemente maior para aproveitar o espaço */
+    :root { --sidebar-width: 270px; }
+
+    /* KPIs e cards com gap maior — não mais colunas */
+    .summary-grid   { gap: clamp(16px, 1.5vw, 24px); padding: 20px; }
+    .kpi-grid       { gap: clamp(18px, 1.5vw, 28px); }
+    .bottom-grid    { gap: clamp(24px, 2vw, 36px); }
+    .atv-grid       { gap: clamp(16px, 1.5vw, 28px); }
+
+    /* Tipografia ligeiramente maior */
+    .val-num        { font-size: clamp(1.1rem, 1.3vw, 1.5rem); }
+    .insight-card   { padding: clamp(15px, 1.5vw, 24px); }
+}
+
+/* Ultrawide ≥ 2560px */
+@media (min-width: 2560px) {
+    .main-container { max-width: 1800px; }
+    :root           { --sidebar-width: 300px; }
+}
+
+/* ══════════════════════════════════════════════════════════════
+   DESKTOP GRANDE — Full HD (≥ 1440px)
+   max-width entra em ação suavemente
+══════════════════════════════════════════════════════════════ */
+@media (min-width: 1440px) and (max-width: 1919px) {
+    .main-container { max-width: 1440px; }
+}
+
+/* ══════════════════════════════════════════════════════════════
+   NOTEBOOK — 900–1200px
+   Sidebar compacta (só ícones), conteúdo ganha espaço
+══════════════════════════════════════════════════════════════ */
+@media (max-width: 1200px) {
+    /* Sidebar compacta automaticamente */
+    .sidebar {
+        width: var(--sidebar-collapsed-width) !important;
+    }
+    .sidebar .filter-content,
+    .sidebar .nav-text,
+    .sidebar .filters-label,
+    .sidebar .sb-section-label,
+    .sidebar-footer .sf-municipio span,
+    .sidebar-footer .sf-ano span,
+    .sidebar .sb-pill-soon,
+    .sidebar .sb-toggle { display: none; }
+
+    .sidebar .filter-item    { justify-content: center; padding: 10px 6px; }
+    .sidebar .nav-item       { justify-content: center; padding: 10px 8px; gap: 0; }
+    .sidebar .nav-item i     { margin-right: 0; font-size: 18px; }
+    .sidebar .toggle-sidebar { justify-content: center; }
+
+    /* Conteúdo ocupa o espaço liberado */
+    .main-container { margin-left: 0; }
+
+    /* KPIs: 3 colunas confortáveis */
+    .summary-grid   { grid-template-columns: repeat(3, 1fr); }
+    .card-resumo:nth-child(3) { border-right: none; }
+    .kpi-grid       { grid-template-columns: repeat(3, 1fr); }
+    .bottom-grid    { grid-template-columns: 1fr 1fr; }
+    .report-grid-new { grid-template-columns: repeat(2, 1fr); }
+    .charts-comparar-grid { grid-template-columns: 1fr 1fr; }
+    .charts-comparar-grid .insight-card:last-child { grid-column: 1 / -1; }
+}
+
+/* ══════════════════════════════════════════════════════════════
+   TABLET PAISAGEM / NOTEBOOK PEQUENO — 768–900px
+   Sidebar vira drawer, overlay ativo
+══════════════════════════════════════════════════════════════ */
+@media (max-width: 900px) {
+    :root { --sidebar-width: 240px; }
+
+    /* Header */
+    .top-header   { padding: 0 14px; height: 60px; }
+    .top-header .logo-text h1 { font-size: 17px; }
+    .top-header .logo-text p  { display: none; }
+    .btn-header   { padding: 8px 12px; font-size: 12px; }
+
+    /* Sidebar como drawer */
+    .sidebar {
+        position: fixed !important;
+        left: 0; top: 60px; bottom: 0;
+        z-index: 500;
+        width: var(--sidebar-width) !important;
+        transform: translateX(-100%);
+        transition: transform 280ms cubic-bezier(0.4, 0, 0.2, 1);
+        will-change: transform;
+        box-shadow: 4px 0 20px rgba(0,0,0,0.15);
+        /* Restaura textos ocultos na compacta */
+        overflow-y: auto;
+    }
+    /* Restaura itens ocultados pelo breakpoint 1200px */
+    .sidebar .filter-content,
+    .sidebar .nav-text,
+    .sidebar .filters-label,
+    .sidebar .sb-section-label,
+    .sidebar-footer .sf-municipio span,
+    .sidebar-footer .sf-ano span  { display: revert; }
+    .sidebar .filter-item   { justify-content: flex-start; padding: 8px 10px; }
+    .sidebar .nav-item      { justify-content: flex-start; padding: 8px 12px; gap: 10px; }
+    .sidebar .nav-item i    { margin-right: 0; font-size: 16px; }
+    .sidebar .toggle-sidebar { display: none !important; }
+
+    .sidebar.mobile-open  { transform: translateX(0); }
+    .sidebar.collapsed    { transform: translateX(-100%); }
+
+    /* Main sem margem */
+    .main-container { margin-left: 0 !important; }
+    .app-body       { flex-direction: column; }
+
+    /* Conteúdo */
+    .content-body { padding: 12px; }
+    .summary-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 8px;
+        padding: 10px;
+    }
+    .card-resumo:nth-child(2) { border-right: none; }
+    .card-resumo:nth-child(4) { border-right: none; }
+    .card-resumo:nth-child(3) { border-right: 1px solid #f1f5f9; }
+    .bottom-grid          { grid-template-columns: 1fr; }
+    .kpi-grid             { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+    .charts-comparar-grid { grid-template-columns: 1fr; }
+    .comparar-filters     { flex-direction: column; gap: 12px; }
+    .report-grid-new      { grid-template-columns: repeat(2, 1fr); }
+    .report-bottom-grid   { grid-template-columns: 1fr; }
+
+    /* Tabela: scroll horizontal com coluna de nome sticky */
+    .table-container {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    /* Sombra de scroll — indica que há mais conteúdo */
+    .table-container::after {
+        content: "";
+        position: absolute;
+        top: 0; right: 0; bottom: 0;
+        width: 24px;
+        background: linear-gradient(to right, transparent, rgba(255,255,255,0.85));
+        pointer-events: none;
+        border-radius: 0 12px 12px 0;
+    }
+    .table-container { position: relative; }
+
+    /* Nome do aluno sempre visível no scroll horizontal */
+    table td:first-child,
+    table th:first-child {
+        position: sticky;
+        left: 0;
+        background: var(--white);
+        z-index: 1;
+    }
+    table th:first-child { background: #f8fafc; z-index: 2; }
+
+    /* Atividades */
+    .atv-layout { flex-direction: column; }
+    .atv-side-panel {
+        position: fixed;
+        right: 0; top: 0; bottom: 0;
+        z-index: 600;
+        width: 100% !important;
+        max-width: 420px;
+    }
+    .atv-filters-bar { flex-wrap: wrap; gap: 8px; }
+    .atv-grid { grid-template-columns: 1fr 1fr; }
+
+    /* Configurações */
+    .cfg-layout { flex-direction: column; }
+    .cfg-sidebar {
+        width: 100%;
+        flex-direction: row;
+        overflow-x: auto;
+        padding: 8px;
+        gap: 4px;
+        border-right: none;
+        border-bottom: 1px solid var(--border);
+    }
+    .cfg-nav-item {
+        white-space: nowrap;
+        flex-shrink: 0;
+        padding: 8px 14px;
+        border-radius: 8px;
+        border-left: none !important;
+    }
+    .cfg-nav-item.active { border-bottom: 2px solid var(--active-icon); }
+    .cfg-form-grid { grid-template-columns: 1fr; }
+    .cfg-form-group.full { grid-column: 1; }
+
+    /* Modal visualização atividade */
+    .mviz-layout      { flex-direction: column; height: auto; max-height: 90vh; }
+    .mviz-info-col    { width: 100%; border-right: none; border-bottom: 1px solid var(--border); max-height: 280px; }
+    .mviz-preview-col { height: 300px; }
+
+    /* Profile card: oculto em telas menores que 900 */
+    .profile-card { display: none; }
+}
+
+/* ══════════════════════════════════════════════════════════════
+   MOBILE — até 480px
+══════════════════════════════════════════════════════════════ */
+@media (max-width: 480px) {
+    /* Login */
+    .login-card { padding: 32px 20px; margin: 16px; }
+
+    /* KPIs 2 colunas */
+    .summary-grid    { grid-template-columns: repeat(2, 1fr); }
+    .kpi-grid        { grid-template-columns: repeat(2, 1fr); }
+    .atv-grid        { grid-template-columns: 1fr; }
+    .report-grid-new { grid-template-columns: repeat(2, 1fr); }
+
+    /* Tabela compacta */
+    table         { font-size: 11px; }
+    .select-hab   { font-size: 9px; }
+
+    /* Touch targets — Apple/Google recomendam 44px mínimo */
+    input, select, textarea, button {
+        min-height: 44px;
+    }
+    /* Exceção: selects de nota na tabela — não devem crescer tanto */
+    .select-hab { min-height: 36px; }
+
+    /* iPhone: font-size < 16px dispara zoom automático */
+    input, select, textarea { font-size: 16px !important; }
+    .select-hab { font-size: 12px !important; }
+
+    /* Botões de ação em coluna */
+    .cfg-form-actions { flex-direction: column; }
+    .cfg-form-actions button { width: 100%; justify-content: center; }
+
+    /* Notificações ocupam mais largura */
+    #ntf-container  { right: 10px; left: 10px; }
+    .ntf-toast      { min-width: unset; max-width: 100%; }
+}
+
+/* ══════════════════════════════════════════════════════════════
+   CELULAR PEQUENO — até 360px
+══════════════════════════════════════════════════════════════ */
+@media (max-width: 360px) {
+    .top-header { padding: 0 8px; }
+    .top-header .logo-text h1 { font-size: 14px; }
+    .content-body { padding: 8px; }
+    .summary-grid { gap: 6px; padding: 8px; }
+    .btn-header   { padding: 6px 10px; font-size: 11px; }
+    /* KPIs em 1 coluna para telas muito pequenas */
+    .kpi-grid { grid-template-columns: 1fr; }
+}
+
+/* ══════════════════════════════════════════════════════════════
+   ORIENTAÇÃO — Paisagem em mobile baixo
+══════════════════════════════════════════════════════════════ */
+@media (orientation: landscape) and (max-height: 500px) {
+    .top-header { height: 48px; }
+    .sidebar    { top: 48px; }
+    .sidebar-overlay { top: 48px; }
+    .content-body { padding: 8px; }
+    /* Modal não excede a altura disponível */
+    .modal-content,
+    .mviz-layout  { max-height: 92vh; }
+}
+
+/* ══════════════════════════════════════════════════════════════
+   ACESSIBILIDADE
+══════════════════════════════════════════════════════════════ */
+/* Respeita preferência do sistema por menos animações */
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        transition-duration: 0.01ms !important;
+    }
+}
+
+/* Alto contraste */
+@media (prefers-contrast: high) {
+    .sidebar, .top-header, .insight-card,
+    .table-container, .card-resumo {
+        border-width: 2px;
+    }
+    .nav-item.active { outline: 2px solid var(--active-icon); }
+}
+
+/* ════════════════════════════════════════════════════════════════
+   IMPRESSÃO — RELATÓRIO (A4 paisagem)
+════════════════════════════════════════════════════════════════ */
+@media print {
+    @page { size: A4 landscape; margin: 3mm; }
+
+    * {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+    }
+
+    #atv-print-area { display: none !important; }
+
+    body {
+        overflow: visible !important;
+        height: auto !important;
+        display: block !important;
+        background: white !important;
+    }
+    .top-header,
+    .app-body > aside,
+    .no-print,
+    #atv-print-area { display: none !important; }
+
+    .app-body        { display: block !important; overflow: visible !important; }
+    .main-container  { overflow: visible !important; display: block !important; max-width: none !important; }
+    .content-body    { display: none !important; }
+    #aba-relatorio   { display: block !important; padding: 0 !important; }
+
+    .report-grid-new {
+        display: grid !important;
+        grid-template-columns: repeat(4,1fr) !important;
+        gap: 5px !important;
+        margin-bottom: 5px !important;
+    }
+    .card-info-new        { padding: 5px 8px !important; border-radius: 7px !important; }
+    .card-info-new .main-val { font-size: 13px !important; }
+
+    .table-container { margin-bottom: 5px !important; }
+    table { font-size: 10.5px !important; border-collapse: collapse !important; }
+    td, th { padding: 3px 5px !important; height: auto !important; font-size: 10.5px !important; }
+    .txt-rec { font-size: 10px !important; line-height: 1.3 !important; }
+    .badge-nivel {
+        display: inline-block;
+        height: 18px;
+        line-height: 18px;
+        padding: 0 6px !important;
+        font-size: 9px !important;
+        vertical-align: middle;
+    }
+
+    .report-bottom-grid {
+        display: grid !important;
+        grid-template-columns: 1fr 1fr !important;
+        gap: 8px !important;
+        margin-top: 5px !important;
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+    }
+    .report-chart-card {
+        height: 190px !important;
+        padding: 5px !important;
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+    }
+    .report-chart-card canvas { width: 100% !important; height: 170px !important; }
+    .report-chart-card h4     { font-size: 9px !important; margin-bottom: 2px !important; }
+
+    .btn-ver-atividades { display: none !important; }
+    #aba-relatorio table th:last-child,
+    #aba-relatorio table td:last-child { display: none !important; }
+
+    /* Cabeçalho da tabela — força fundo azul e texto branco na impressão */
+    #aba-relatorio thead tr { background: #1e40af !important; }
+    #aba-relatorio thead tr th { background: #1e40af !important; color: #fff !important; }
+}
+
+/* ════════════════════════════════════════════════════════════════
+   IMPRESSÃO — ROTINA (rot-print-area)
+════════════════════════════════════════════════════════════════ */
+#rot-print-area { display: none; }
+
+@media print {
+    body.printing-rotina > *:not(#rot-print-area) { display: none !important; }
+
+    body.printing-rotina #rot-print-area {
+        display: block !important;
+        width: 297mm;
+        min-height: 210mm;
+        background: white;
+        padding: 12mm;
+        font-family: Arial, sans-serif;
+    }
+    .rot-print-header {
+        display: flex;
+        align-items: center;
+        border-bottom: 3px solid #000;
+        padding-bottom: 10px;
+        margin-bottom: 12px;
+    }
+    .rot-print-header h1  { margin: 0; font-size: 28px; font-weight: 900; letter-spacing: 2px; flex: 1; }
+    .rot-print-meta       { width: 300px; font-size: 12px; }
+    .rot-print-meta div   { border-bottom: 1.5px solid #000; margin-bottom: 5px; padding-bottom: 3px; }
+    .rot-print-table      { width: 100%; border-collapse: collapse; border: 2.5px solid #000; margin-bottom: 10px; }
+    .rot-print-table th   { background: #000; color: #fff; padding: 10px; font-size: 11px; border: 1.5px solid #000; }
+    .rot-print-table td   { border: 1.5px solid #000; padding: 10px 8px; font-size: 11px; min-height: 40px; vertical-align: top; }
+    .rot-print-table td.ph{ text-align: center; font-weight: 800; font-size: 12px; background: #f9f9f9; width: 80px; }
+    .rot-print-table tr.intervalo td { background: #fffde7 !important; text-align: center; font-weight: 900; font-size: 16px; letter-spacing: 3px; }
+    .rot-print-table tr.saida     td { background: #e8f5e9 !important; text-align: center; font-weight: 900; font-size: 16px; letter-spacing: 3px; }
+}

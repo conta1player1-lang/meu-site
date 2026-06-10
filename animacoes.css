@@ -1,0 +1,133 @@
+/* ════════════════════════════════════════════════════════════════
+   animacoes.css — Transições de tema e animações do toggle
+   A.V. Leitura+ — Sistema de Habilidades
+
+   REGRA: Transições apenas em elementos explícitos.
+   Nunca usar transition: all ou seletor universal.
+   transform, opacity e width excluídos para não quebrar
+   animações existentes da sidebar, modais e loading.
+════════════════════════════════════════════════════════════════ */
+
+/* ══════════════════════════════════════════════════════════════
+   TRANSIÇÕES DE TEMA — lista explícita de elementos
+   Aplicadas globalmente mas em propriedades seguras
+══════════════════════════════════════════════════════════════ */
+body,
+.top-header,
+.sidebar,
+.sidebar-footer,
+.main-container,
+.content-body,
+.nav-item,
+.filter-item,
+.card-resumo,
+.summary-grid,
+.insight-card,
+.cfg-form-card,
+.modal-content,
+.modal-atv-card,
+.modal-atv-card-viz,
+.modal-atv-form-card,
+.modal-overlay,
+.sidebar-overlay,
+.table-container,
+table,
+thead tr th,
+tbody tr td,
+.atv-card,
+.atv-card-list-item,
+.report-chart-card,
+.card-info-new,
+.profile-card,
+.profile-photo,
+input,
+select,
+textarea,
+.select-hab,
+button,
+.badge-nivel,
+.pre1, .pre2, .iniciante, .avancado, .fluente,
+.status-sim, .status-parcial, .status-nao,
+.cfg-role-badge,
+.sb-toggle {
+    transition:
+        background-color 250ms ease,
+        border-color     250ms ease,
+        color            150ms ease,
+        box-shadow       250ms ease;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   CLASSE .no-transition — desativa animações no carregamento
+   Evita o flash de transição quando a página carrega
+══════════════════════════════════════════════════════════════ */
+.no-transition,
+.no-transition * {
+    transition: none !important;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   TOGGLE DE DARK MODE — animação do trilho e thumb
+══════════════════════════════════════════════════════════════ */
+
+/* Reativa o botão (estava desabilitado com cursor: default) */
+.sb-darkmode-btn {
+    opacity: 0.75;
+    cursor: pointer !important;
+}
+.sb-darkmode-btn:hover {
+    background: var(--hover-bg) !important;
+    color: var(--texto-primario) !important;
+    opacity: 1;
+}
+.sb-darkmode-btn:hover i {
+    color: var(--cor-primaria) !important;
+}
+
+/* Trilho do toggle com bounce premium */
+.sb-toggle {
+    transition:
+        background-color 300ms cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+}
+
+/* Thumb desliza suavemente */
+.sb-toggle-thumb {
+    transition: left 300ms cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+}
+
+/* Ícone de lua — anima ao ativar dark mode */
+.sb-darkmode-btn i {
+    transition:
+        transform 250ms ease,
+        opacity   200ms ease;
+}
+[data-theme="dark"] .sb-darkmode-btn i {
+    transform: rotate(-20deg);
+    color: var(--cor-primaria);
+}
+
+/* ══════════════════════════════════════════════════════════════
+   ENTRADA DO TEMA ESCURO
+   Suaviza o "choque" visual na primeira troca
+══════════════════════════════════════════════════════════════ */
+@keyframes temaEntrada {
+    from { opacity: 0.94; }
+    to   { opacity: 1; }
+}
+[data-theme="dark"] body {
+    animation: temaEntrada 200ms ease forwards;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   ACESSIBILIDADE — respeita preferência do sistema
+══════════════════════════════════════════════════════════════ */
+@media (prefers-reduced-motion: reduce) {
+    .sb-toggle,
+    .sb-toggle-thumb,
+    .sb-darkmode-btn i {
+        transition: none !important;
+    }
+    [data-theme="dark"] body {
+        animation: none !important;
+    }
+}

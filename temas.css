@@ -1,0 +1,111 @@
+/* ════════════════════════════════════════════════════════════════
+   temas.css — Variáveis semânticas de tema
+   A.V. Leitura+ — Sistema de Habilidades
+
+   REGRA: Este arquivo contém APENAS variáveis CSS.
+   Nenhum seletor de componente aqui.
+   Toda cor do sistema passa por estas variáveis.
+════════════════════════════════════════════════════════════════ */
+
+/* ════════════════════════════════════════════════════════════════
+   TEMA CLARO (padrão)
+════════════════════════════════════════════════════════════════ */
+:root {
+    /* ── Fundos ─────────────────────────────────────────────── */
+    --bg-base:              #f8fafc;
+    --bg-surface:           #ffffff;
+    --bg-card:              #ffffff;
+    --bg-input:             #f1f5f9;
+    --bg-hover:             #f8fafc;
+    --bg-active:            rgba(59, 91, 219, 0.08);
+
+    /* ── Bordas ─────────────────────────────────────────────── */
+    --border:               rgba(0, 0, 0, 0.08);
+    --border-subtle:        rgba(0, 0, 0, 0.04);
+    --border-active:        rgba(59, 91, 219, 0.5);
+
+    /* ── Textos ─────────────────────────────────────────────── */
+    --texto-primario:       #1e293b;
+    --texto-secundario:     #64748b;
+    --texto-desabilitado:   #cbd5e1;
+    --texto-invertido:      #ffffff;
+
+    /* ── Cores de acento ────────────────────────────────────── */
+    --cor-primaria:         #3b5bdb;
+    --cor-secundaria:       #f97316;
+    --cor-sucesso:          #22c55e;
+    --cor-perigo:           #ef4444;
+    --cor-aviso:            #facc15;
+
+    /* ── Sombras ────────────────────────────────────────────── */
+    --sombra-baixa:         0 2px 8px rgba(0, 0, 0, 0.06);
+    --sombra-media:         0 8px 32px rgba(0, 0, 0, 0.12);
+    --sombra-alta:          0 16px 48px rgba(0, 0, 0, 0.18);
+
+    /* ── Aliases para compatibilidade com main.css atual ────── */
+    /* Mantidos para não quebrar componentes existentes enquanto
+       a migração de cores hardcoded não está concluída         */
+    --primary:              var(--cor-primaria);
+    --secondary:            #3b82f6;
+    --bg:                   var(--bg-base);
+    --text-dark:            var(--texto-primario);
+    --white:                var(--bg-surface);
+    --danger:               var(--cor-perigo);
+    --success:              var(--cor-sucesso);
+    --sidebar-bg:           var(--bg-surface);
+    --active-bg:            var(--bg-active);
+    --hover-bg:             var(--bg-hover);
+    --text-color:           var(--texto-primario);
+    --active-icon:          #1E5AA8;
+}
+
+/* ════════════════════════════════════════════════════════════════
+   TEMA ESCURO
+   Elevated Dark com Surface Tint (Linear / Material Design 3)
+════════════════════════════════════════════════════════════════ */
+[data-theme="dark"] {
+    /* ── Fundos ─────────────────────────────────────────────── */
+    --bg-base:              #0d1117;
+    --bg-surface:           #131926;
+    --bg-card:              #1a2234;
+    --bg-input:             #1f2a3d;
+    --bg-hover:             #243044;
+    --bg-active:            rgba(76, 110, 245, 0.12);
+
+    /* ── Bordas ─────────────────────────────────────────────── */
+    --border:               rgba(255, 255, 255, 0.07);
+    --border-subtle:        rgba(255, 255, 255, 0.04);
+    --border-active:        rgba(76, 110, 245, 0.5);
+
+    /* ── Textos ─────────────────────────────────────────────── */
+    --texto-primario:       #e2e8f4;
+    --texto-secundario:     #8896b3;
+    --texto-desabilitado:   #4a5878;
+    --texto-invertido:      #0d1117;
+
+    /* ── Cores de acento (+brilho para compensar fundo escuro) ─ */
+    --cor-primaria:         #4c6ef5;
+    --cor-secundaria:       #ff8c38;
+    --cor-sucesso:          #34d870;
+    --cor-perigo:           #f87171;
+    --cor-aviso:            #fde047;
+
+    /* ── Sombras (muito mais opacas no escuro) ──────────────── */
+    --sombra-baixa:         0 2px 8px rgba(0, 0, 0, 0.3);
+    --sombra-media:         0 8px 32px rgba(0, 0, 0, 0.5);
+    --sombra-alta:          0 16px 48px rgba(0, 0, 0, 0.65);
+
+    /* ── Aliases para compatibilidade ──────────────────────── */
+    --primary:              var(--cor-primaria);
+    --secondary:            #4c6ef5;
+    --bg:                   var(--bg-base);
+    --text-dark:            var(--texto-primario);
+    --white:                var(--bg-card);
+    --danger:               var(--cor-perigo);
+    --success:              var(--cor-sucesso);
+    --sidebar-bg:           var(--bg-surface);
+    --active-bg:            var(--bg-active);
+    --hover-bg:             var(--bg-hover);
+    --text-color:           var(--texto-primario);
+    --active-icon:          #6b8cff;
+}
