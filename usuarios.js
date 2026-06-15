@@ -225,6 +225,16 @@ async function fazerLogin() {
     /* Preenche a tela de carregamento com nome e saudação do usuário */
     if (typeof avlPreencherTela === "function") avlPreencherTela(usuario);
 
+    /* Carrega foto do professor do banco (fotos_professores) para todos os dispositivos */
+    if (window.sbClient && window.sbOnline && usuario.id) {
+        sbCarregarFotoProfessor(usuario.id).then(function(urlPublica) {
+            if (urlPublica) {
+                cfgAplicarFotoHeader(urlPublica);
+                localStorage.setItem("foto_usuario_" + usuario.id, urlPublica);
+            }
+        }).catch(function() {});
+    }
+
     document.getElementById("login-screen").classList.add("hidden");
     document.getElementById("main-app").style.display = "flex";
 

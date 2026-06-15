@@ -330,12 +330,12 @@ function fecharSidebarMobile() {
     document.getElementById("sidebar-overlay").classList.remove("visible");
 }
 function detectarMobile() {
-    var isMobile = window.innerWidth <= 768;
+    var isMobile = window.innerWidth <= 900;
     var btn = document.getElementById("mobile-menu-btn");
     if (btn) btn.style.display = isMobile ? "flex" : "none";
 }
 function toggleSidebar() {
-    if (window.innerWidth <= 768) { toggleSidebarMobile(); return; }
+    if (window.innerWidth <= 900) { toggleSidebarMobile(); return; }
     var sb = document.getElementById("sidebar");
     sb.classList.toggle("collapsed");
     document.getElementById("toggleIcon").className =
@@ -1067,6 +1067,10 @@ async function inicializarApp() {
     atualizarBotoesHeader("lancamentos");
     detectarMobile();
     window.addEventListener("resize", detectarMobile);
+    window.addEventListener("orientationchange", function() {
+        setTimeout(detectarMobile, 150); /* aguarda orientação estabilizar */
+        fecharSidebarMobile(); /* fecha sidebar ao girar */
+    });
     cfgCarregarFotoDoUsuarioLogado();
 
     if (window.sbOnline) {
