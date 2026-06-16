@@ -422,7 +422,7 @@ function trocarAba(nome, event) {
     if (nome === "atividades")    setTimeout(atvRenderizar, 50);
     if (nome === "configuracoes") setTimeout(cfgIniciar, 50);
     if (nome === "rotinas")       setTimeout(rotIniciar, 50);
-    if (window.innerWidth <= 768) fecharSidebarMobile();
+    if (window.innerWidth <= 900) fecharSidebarMobile();
 }
 
 /* ════════════════════════════════════════════════════════════════

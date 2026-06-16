@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" rx="80" fill="#1e40af"/>
+  <rect x="60" y="60" width="392" height="392" rx="60" fill="#2563eb"/>
+  <!-- Chapéu de formatura -->
+  <polygon points="256,100 420,180 256,220 92,180" fill="white"/>
+  <rect x="240" y="220" width="32" height="80" fill="white"/>
+  <ellipse cx="256" cy="300" rx="60" ry="20" fill="white"/>
+  <!-- Linhas de livro/leitura -->
+  <rect x="140" y="340" width="232" height="16" rx="8" fill="rgba(255,255,255,0.7)"/>
+  <rect x="160" y="368" width="192" height="16" rx="8" fill="rgba(255,255,255,0.5)"/>
+  <rect x="180" y="396" width="152" height="16" rx="8" fill="rgba(255,255,255,0.3)"/>
+</svg>
