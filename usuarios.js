@@ -495,8 +495,20 @@ function cfgAplicarFotoHeader(dataUrl) {
 async function cfgCarregarFotoDoUsuarioLogado() {
     var u = getUsuarioLogado();
     if (!u) return;
-    if (u.foto_url) { cfgAplicarFotoHeader(u.foto_url); return; }
-    var fotoLocal = localStorage.getItem("foto_usuario_" + u.id);
+
+    /* 1. Aplica cache local imediatamente (sem esperar rede) */
+    var fotoLocal = u.foto_url || localStorage.getItem("foto_usuario_" + u.id);
     if (fotoLocal) cfgAplicarFotoHeader(fotoLocal);
+
+    /* 2. Sempre busca do banco para garantir foto atualizada em qualquer dispositivo */
+    if (window.sbClient && window.sbOnline && u.id) {
+        try {
+            var urlPublica = await sbCarregarFotoProfessor(u.id);
+            if (urlPublica) {
+                cfgAplicarFotoHeader(urlPublica);
+                localStorage.setItem("foto_usuario_" + u.id, urlPublica);
+            }
+        } catch(e) {}
+    }
 }
 

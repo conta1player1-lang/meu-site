@@ -733,7 +733,10 @@ function atvVisualizar(id) {
        - Word/outros sem arquivo: mantém botão (abre fallback de download) */
     var btnImprimir = document.getElementById("mviz-btn-imprimir");
     if (btnImprimir) {
-        var semImpressao = (a.tipo === "PDF") || (ATV_TIPOS_LINK.indexOf(a.tipo) >= 0);
+        var semImpressao = (ATV_TIPOS_LINK.indexOf(a.tipo) >= 0);
+        /* No mobile, PDF não tem barra do browser — mostra botão imprimir */
+        var isMobile = window.innerWidth <= 900;
+        if (a.tipo === "PDF" && !isMobile) semImpressao = true;
         btnImprimir.style.display = semImpressao ? "none" : "";
     }
 
@@ -845,9 +848,15 @@ function atvImprimirAtividade(id) {
     var a = atvDados.find(function(x) { return x.id === id; });
     if (!a) return;
 
-    /* PDF e tipos digitais: botão está oculto, não deve chegar aqui */
-    if (a.tipo === "PDF") return;
+    /* Tipos digitais sem impressão */
     if (ATV_TIPOS_LINK.indexOf(a.tipo) >= 0) return;
+
+    /* PDF no mobile: abre em nova aba para o browser mobile imprimir */
+    if (a.tipo === "PDF") {
+        var pdfSrc = a.arquivo_url || localStorage.getItem("atv_arquivo_" + id);
+        if (pdfSrc) window.open(pdfSrc, "_blank");
+        return;
+    }
 
     var urlStorage = a.arquivo_url || null;
     var localData  = localStorage.getItem("atv_arquivo_" + id);

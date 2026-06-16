@@ -1,4 +1,55 @@
 /* ════════════════════════════════════════════════════════════════
+   FIX DEFINITIVO — faixa branca lateral no mobile
+   Causa: top-header padding 30px + elementos com largura fixa
+   vazam o layout mesmo com overflow-x:hidden no body/html
+════════════════════════════════════════════════════════════════ */
+@media (max-width: 900px) {
+    /* Tudo dentro do viewport */
+    html, body {
+        overflow-x: hidden !important;
+        width: 100% !important;
+        max-width: 100vw !important;
+    }
+
+    /* Header: padding grande vaza no mobile */
+    .top-header {
+        padding: 0 12px !important;
+    }
+
+    /* app-body e main-container contêm tudo */
+    .app-body {
+        overflow-x: hidden !important;
+        max-width: 100vw !important;
+    }
+    .main-container {
+        overflow-x: hidden !important;
+        max-width: 100vw !important;
+        min-width: 0 !important;
+    }
+    .content-body {
+        overflow-x: hidden !important;
+        max-width: 100% !important;
+        padding: 12px !important;
+    }
+
+    /* Impede que qualquer filho empurre além da tela */
+    .summary-grid,
+    .table-container,
+    .bottom-grid,
+    .report-bottom-grid,
+    .charts-comparar-grid,
+    .ca-kpi-grid {
+        max-width: 100% !important;
+        overflow-x: hidden !important;
+    }
+
+    /* Tabelas: scroll interno, nunca vaza */
+    .table-container {
+        overflow-x: auto !important;
+    }
+}
+
+/* ════════════════════════════════════════════════════════════════
    responsivo.css — Media Queries e Impressão
    A.V. Leitura+ — Sistema de Habilidades
    Estratégia: desktop-first adaptativo
