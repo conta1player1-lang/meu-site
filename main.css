@@ -658,10 +658,13 @@ td {
     color: white;
     font-weight: 800;
     font-size: 10.5px;
-    width: 110px;
+    min-width: 80px;
+    max-width: 110px;
+    width: auto;
     display: inline-block;
     text-align: center;
     line-height: 1.2;
+    white-space: nowrap;
 }
 .pre1      { background: #ef4444; }
 .pre2      { background: #fb923c; }

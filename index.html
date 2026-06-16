@@ -11,8 +11,9 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="AV Leitura">
     <link rel="manifest" href="manifest.json">
-    <link rel="apple-touch-icon" href="icon-192.png">
-    <link rel="icon" type="image/png" href="icon-192.png">
+    <link rel="apple-touch-icon" sizes="192x192" href="apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
 
     <!-- Dependências externas -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -90,6 +91,12 @@
         </div>
 
         <header class="top-header">
+            <!-- Hambúrguer à esquerda — fica antes do logo no mobile -->
+            <button class="mobile-menu-btn" id="mobile-menu-btn"
+                    onclick="toggleSidebarMobile()" style="display:none;">
+                <i class="fas fa-bars"></i>
+            </button>
+
             <div class="logo-area">
                 <i class="fas fa-graduation-cap"></i>
                 <div class="logo-text">
@@ -97,13 +104,7 @@
                     <p>Sistema de Acompanhamento de Leitura</p>
                     <p id="logo-escola" style="font-size: 11px; font-weight: 500;">U.I. Carolina Mesquita de Araújo</p>
                 </div>
-                <!-- al-header-badge removido desta área a pedido -->
             </div>
-
-            <button class="mobile-menu-btn" id="mobile-menu-btn"
-                    onclick="toggleSidebarMobile()" style="display:none; margin-right:8px;">
-                <i class="fas fa-bars"></i>
-            </button>
 
             <div class="header-actions">
                 <div class="profile-card" id="profileCard">
