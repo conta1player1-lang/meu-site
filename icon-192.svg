@@ -1,12 +1,24 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-  <rect width="512" height="512" rx="80" fill="#1e40af"/>
-  <rect x="60" y="60" width="392" height="392" rx="60" fill="#2563eb"/>
-  <!-- Chapéu de formatura -->
-  <polygon points="256,100 420,180 256,220 92,180" fill="white"/>
-  <rect x="240" y="220" width="32" height="80" fill="white"/>
-  <ellipse cx="256" cy="300" rx="60" ry="20" fill="white"/>
-  <!-- Linhas de livro/leitura -->
-  <rect x="140" y="340" width="232" height="16" rx="8" fill="rgba(255,255,255,0.7)"/>
-  <rect x="160" y="368" width="192" height="16" rx="8" fill="rgba(255,255,255,0.5)"/>
-  <rect x="180" y="396" width="152" height="16" rx="8" fill="rgba(255,255,255,0.3)"/>
+  <!-- Fundo azul do sistema -->
+  <rect width="512" height="512" rx="96" fill="#1e3a8a"/>
+  <!-- Sombra suave interna -->
+  <rect width="512" height="512" rx="96" fill="url(#grad)" opacity="0.3"/>
+  <defs>
+    <linearGradient id="grad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#3b82f6"/>
+      <stop offset="100%" stop-color="#1e40af" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+  <!-- Chapéu de formatura (fa-graduation-cap estilo Font Awesome) -->
+  <!-- Aba horizontal (mortarboard top) -->
+  <polygon points="256,120 460,210 256,280 52,210" fill="white"/>
+  <!-- Corpo do chapéu (topo quadrado) -->
+  <rect x="196" y="280" width="120" height="12" rx="4" fill="white"/>
+  <!-- Lateral do chapéu -->
+  <path d="M196 292 Q196 370 256 385 Q316 370 316 292 L196 292Z" fill="white"/>
+  <!-- Cordão lateral -->
+  <line x1="460" y1="210" x2="460" y2="290" stroke="white" stroke-width="8" stroke-linecap="round"/>
+  <circle cx="460" cy="300" r="12" fill="white"/>
+  <!-- Reflexo no topo -->
+  <polygon points="256,120 360,163 256,196 152,163" fill="rgba(255,255,255,0.15)"/>
 </svg>

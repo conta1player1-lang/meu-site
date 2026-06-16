@@ -468,44 +468,27 @@
     .rot-print-table tr.saida     td { background: #e8f5e9 !important; text-align: center; font-weight: 900; font-size: 16px; letter-spacing: 3px; }
 }
 /* ════════════════════════════════════════════════════════════════
-   AUDITORIA MOBILE — correções gerais de overflow e toque
+   AUDITORIA MOBILE — correções definitivas de overflow
 ════════════════════════════════════════════════════════════════ */
-
-/* Garante que nenhum elemento ultrapasse a largura da tela */
 @media (max-width: 900px) {
-    * { box-sizing: border-box; }
-
-    /* Previne overflow horizontal global */
+    /* Impede qualquer filho de vazar além da tela */
     .app-body,
     .main-container,
-    .content-body,
-    .table-container,
-    .summary-grid,
-    .kpi-grid,
-    .bottom-grid {
-        max-width: 100%;
+    .content-body {
+        max-width: 100vw;
+        overflow-x: hidden;
     }
 
-    /* Nome do aluno na tabela não quebra linha */
-    table td:first-child {
-        white-space: nowrap;
-        max-width: 140px;
-        overflow: hidden;
-        text-overflow: ellipsis;
+    /* content-body: padding menor para não somar à largura */
+    .content-body {
+        padding: 12px !important;
     }
 
-    /* Tabela com scroll horizontal suave */
+    /* Tabela com scroll interno — não deixa vazar */
     .table-container {
-        overflow-x: auto;
+        overflow-x: auto !important;
         -webkit-overflow-scrolling: touch;
-        width: 100%;
-    }
-
-    /* Cards KPI em 2 colunas no mobile */
-    .ca-kpi-grid,
-    .kpi-grid {
-        grid-template-columns: repeat(2, 1fr) !important;
-        gap: 8px;
+        max-width: 100%;
     }
 
     /* Modais não excedem a tela */
@@ -516,33 +499,23 @@
         overflow-y: auto;
     }
 
-    /* Botões com área de toque adequada */
-    .btn-header,
-    .ca-btn-salvar,
-    .ca-btn-clear {
-        min-height: 40px;
+    /* Cards KPI 2 colunas */
+    .ca-kpi-grid,
+    .kpi-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 8px;
     }
 
-    /* Sidebar overlay cobre tela toda */
-    .sidebar-overlay {
-        top: 0 !important;
-    }
+    /* Sidebar overlay sempre cobre tudo */
+    .sidebar-overlay { top: 0 !important; }
 }
 
 /* Portrait específico */
 @media (orientation: portrait) and (max-width: 480px) {
-    /* KPIs em 1 coluna em telas muito estreitas */
-    .summary-grid {
-        grid-template-columns: 1fr 1fr !important;
-    }
-
-    /* Cabeçalho da tabela não quebra */
     table th {
         white-space: nowrap;
         font-size: 10px;
     }
-
-    /* Texto dos selects menor para caber */
     .select-hab {
         font-size: 10px !important;
         padding: 2px 4px;
@@ -550,73 +523,132 @@
 }
 
 /* ════════════════════════════════════════════════════════════════
-   ABA ROTINAS — responsividade mobile portrait
+   ABA ROTINAS — responsividade mobile completa
 ════════════════════════════════════════════════════════════════ */
 @media (max-width: 900px) {
-    /* Rotinas: empilha sidebar em cima do conteúdo */
+    /* Layout principal: empilha lista de rotinas acima do editor */
+    #aba-rotinas {
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
+    }
     .rot-layout {
         flex-direction: column !important;
-        overflow-y: auto;
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
+        height: auto !important;
     }
+
+    /* ── Lista de rotinas salvas ── */
     .rot-sidebar {
         width: 100% !important;
-        max-height: 260px;
+        max-width: 100% !important;
+        max-height: 220px;
         border-right: none !important;
         border-bottom: 1px solid var(--border);
         flex-shrink: 0;
-    }
-    .rot-lista {
-        max-height: 160px;
-    }
-    .rot-main {
-        flex: 1;
-        min-height: 0;
         overflow: hidden;
     }
-    /* Tabela de horários com scroll horizontal */
-    .rot-main-body {
-        padding: 10px;
-        overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
+    .rot-lista {
+        max-height: 130px;
+        overflow-y: auto;
     }
-    .rot-table-card {
-        min-width: 480px; /* permite scroll horizontal */
+    .rot-item-actions {
+        flex-wrap: wrap;
     }
-    /* Formulário nova rotina em coluna */
-    .rot-form-grid,
-    .rot-form-row {
-        flex-direction: column !important;
-        gap: 8px !important;
+    .rot-item-actions button {
+        flex: 1;
+        min-width: 60px;
+        font-size: 10px;
+        padding: 5px 4px;
     }
-    .rot-form-turmas {
+
+    /* ── Editor de rotina ── */
+    .rot-main {
         width: 100% !important;
         max-width: 100% !important;
+        overflow-x: hidden !important;
+        padding: 10px !important;
+        gap: 10px !important;
     }
-    /* Cabeçalho da rotina */
+
+    /* Cabeçalho do editor */
     .rot-main-header {
-        padding: 12px 10px !important;
-        flex-wrap: wrap;
-        gap: 8px;
+        flex-wrap: wrap !important;
+        gap: 8px !important;
+        padding: 0 !important;
     }
-    .rot-header-actions {
+    .rot-header-info {
+        flex: 1;
+        min-width: 0;
+    }
+    .rot-main-header h2 {
+        font-size: 14px !important;
+    }
+
+    /* Barra de metadados: campos em coluna */
+    .rot-meta-bar {
+        flex-direction: column !important;
+        gap: 8px !important;
+        padding: 10px !important;
+    }
+    .rot-meta-group {
+        min-width: 0 !important;
+        width: 100% !important;
+        flex: unset !important;
+    }
+    .rot-meta-group select,
+    .rot-meta-group input {
         width: 100%;
-        display: flex;
-        gap: 6px;
-        flex-wrap: wrap;
+        font-size: 14px !important; /* evita zoom no iOS */
     }
-    .rot-header-actions button {
+
+    /* Card "Nova Rotina Semanal" */
+    .rot-nova-card {
+        flex-direction: column !important;
+        align-items: stretch !important;
+        gap: 10px !important;
+        padding: 12px !important;
+    }
+    .rot-nova-card > div { flex: unset !important; }
+    .rot-nova-card button {
+        width: 100% !important;
+        justify-content: center !important;
+    }
+
+    /* Tabela de horários: scroll horizontal interno */
+    .rot-grade-card,
+    .rot-table-card {
+        overflow-x: auto !important;
+        -webkit-overflow-scrolling: touch;
+        max-width: 100%;
+    }
+    .rot-grade,
+    .rot-table {
+        min-width: 480px; /* scroll interno, não vaza */
+    }
+    .rot-viz-table {
+        min-width: 480px;
+    }
+
+    /* Células da tabela menores no mobile */
+    .rot-grade th,
+    .rot-table th,
+    .rot-grade td,
+    .rot-table td {
+        font-size: 10px !important;
+        padding: 6px 4px !important;
+    }
+
+    /* Botões de ação da rotina */
+    .rot-actions-bar,
+    .rot-btn-group {
+        flex-wrap: wrap !important;
+        gap: 6px !important;
+    }
+    .rot-actions-bar button,
+    .rot-btn-group button {
         flex: 1;
         min-width: 80px;
         font-size: 11px;
-    }
-    /* Nova rotina card */
-    .rot-nova-card {
-        flex-direction: column !important;
-        align-items: flex-start !important;
-        gap: 10px;
-    }
-    .rot-nova-card button {
-        width: 100%;
-        justify-content: center;
     }
 }
