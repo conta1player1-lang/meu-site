@@ -321,27 +321,54 @@ function getTextoRecomendacao(s) {
 /* ════════════════════════════════════════════════════════════════
    SIDEBAR / MOBILE
 ════════════════════════════════════════════════════════════════ */
-function toggleSidebarMobile() {
-    document.getElementById("sidebar").classList.toggle("mobile-open");
-    document.getElementById("sidebar-overlay").classList.toggle("visible");
-    document.body.classList.toggle("sidebar-aberta",
-        document.getElementById("sidebar").classList.contains("mobile-open"));
+/* ════════════════════════════════════════════════════════════════
+   SIDEBAR — lógica unificada
+   Desktop  (>900px): colapsa/expande inline (toggle-sidebar no topo da sidebar)
+   Mobile  (≤900px) : drawer com overlay    (header-hamburger abre, toggle fecha)
+════════════════════════════════════════════════════════════════ */
+var SB_MOBILE_MAX = 900; /* único breakpoint — igual ao CSS */
+
+function isMobileView() {
+    return window.innerWidth <= SB_MOBILE_MAX;
 }
+
+/* Abre/fecha drawer mobile */
+function toggleSidebarMobile() {
+    var sb  = document.getElementById("sidebar");
+    var ov  = document.getElementById("sidebar-overlay");
+    var aberta = sb.classList.toggle("mobile-open");
+    ov.classList.toggle("visible", aberta);
+    document.body.classList.toggle("sidebar-aberta", aberta);
+}
+
+/* Fecha drawer mobile explicitamente */
 function fecharSidebarMobile() {
-    document.getElementById("sidebar").classList.remove("mobile-open");
-    document.getElementById("sidebar-overlay").classList.remove("visible");
+    var sb = document.getElementById("sidebar");
+    var ov = document.getElementById("sidebar-overlay");
+    sb.classList.remove("mobile-open");
+    ov.classList.remove("visible");
     document.body.classList.remove("sidebar-aberta");
 }
-function detectarMobile() {
-    /* O botão de toggle agora é sempre o da sidebar (.toggle-sidebar)
-       Comportamento: no mobile abre/fecha como drawer; no desktop colapsa */
-}
+
+/* Botão dos 3 traços (toggle-sidebar dentro da sidebar) */
 function toggleSidebar() {
-    if (window.innerWidth <= 900) { toggleSidebarMobile(); return; }
+    if (isMobileView()) {
+        /* No mobile: o toggle-sidebar fecha o drawer */
+        fecharSidebarMobile();
+        return;
+    }
+    /* Desktop: colapsa/expande sidebar inline */
     var sb = document.getElementById("sidebar");
     sb.classList.toggle("collapsed");
-    document.getElementById("toggleIcon").className =
-        sb.classList.contains("collapsed") ? "fas fa-bars" : "fas fa-bars";
+}
+
+/* Ajusta visibilidade do hambúrguer no header conforme tamanho */
+function detectarMobile() {
+    var ham = document.getElementById("header-hamburger");
+    if (!ham) return;
+    ham.style.display = isMobileView() ? "flex" : "none";
+    /* No desktop: garante que drawer está fechado */
+    if (!isMobileView()) fecharSidebarMobile();
 }
 
 /* ════════════════════════════════════════════════════════════════
@@ -424,7 +451,7 @@ function trocarAba(nome, event) {
     if (nome === "atividades")    setTimeout(atvRenderizar, 50);
     if (nome === "configuracoes") setTimeout(cfgIniciar, 50);
     if (nome === "rotinas")       setTimeout(rotIniciar, 50);
-    if (window.innerWidth <= 900) fecharSidebarMobile();
+    if (isMobileView()) fecharSidebarMobile();
 }
 
 /* ════════════════════════════════════════════════════════════════
