@@ -1178,6 +1178,29 @@ async function sbSincronizarTudo() {
         inicializarTurmas();
     } catch(e) { console.warn("[SB] Turmas nao sincronizadas:", e.message); }
 
+    /* Alunos matriculados — garante que alunos sem lançamentos também sejam restaurados */
+    try {
+        var turmas = getTurmasStorage();
+        var periodoAtual = normalizarPeriodo(getPeriodo ? getPeriodo() : (periodosArr[0] ? periodosArr[0].v : ""));
+        for (var tai = 0; tai < turmas.length; tai++) {
+            var tObjA     = turmas[tai];
+            var nomeTurmaA = normalizarTurma((typeof tObjA === "object") ? tObjA.nome : tObjA);
+            try {
+                var alunosDb = await sbBuscarAlunos(nomeTurmaA);
+                if (alunosDb && alunosDb.length > 0) {
+                    /* Mescla: une alunos do banco com alunos locais (sem duplicar) */
+                    var nomesDb    = alunosDb.map(function(a){ return normalizarAluno(a.nome); });
+                    var nomesLocal = JSON.parse(localStorage.getItem(chaveAlunos(nomeTurmaA, periodoAtual)) || "[]");
+                    var merged     = Array.from(new Set(nomesDb.concat(nomesLocal)))
+                                         .filter(Boolean)
+                                         .sort(function(a,b){ return a.localeCompare(b,"pt-BR"); });
+                    localStorage.setItem(chaveAlunos(nomeTurmaA, periodoAtual), JSON.stringify(merged));
+                }
+            } catch(eA) { console.warn("[SB] Alunos nao sincronizados para", nomeTurmaA, eA.message); }
+        }
+        console.log("[SB] Alunos matriculados sincronizados.");
+    } catch(e) { console.warn("[SB] Sync alunos falhou:", e.message); }
+
     /* Lançamentos — via matriculas do ano selecionado */
     try {
         var turmas = getTurmasStorage();
@@ -1194,7 +1217,12 @@ async function sbSincronizarTudo() {
                         var nomes = lancs.map(function(l) { return normalizarAluno(l.aluno_nome); })
                             .filter(Boolean)
                             .sort(function(a, b) { return a.localeCompare(b, "pt-BR"); });
-                        localStorage.setItem(chaveAlunos(nomeTurma, periodo), JSON.stringify(nomes));
+                        /* Mescla com lista já existente (preserva alunos sem lançamentos) */
+                        var nomesExist = JSON.parse(localStorage.getItem(chaveAlunos(nomeTurma, periodo)) || "[]");
+                        var mergedLanc = Array.from(new Set(nomes.concat(nomesExist)))
+                                             .filter(Boolean)
+                                             .sort(function(a,b){ return a.localeCompare(b,"pt-BR"); });
+                        localStorage.setItem(chaveAlunos(nomeTurma, periodo), JSON.stringify(mergedLanc));
                         lancs.forEach(function(l) {
                             var nomeAluno = normalizarAluno(l.aluno_nome);
                             if (!nomeAluno) return;
@@ -1206,10 +1234,7 @@ async function sbSincronizarTudo() {
                             }
                         });
                     }
-                    /* CORREÇÃO: quando lancs = [] NÃO sobrescrever o localStorage com [].
-                       Um aluno recém-cadastrado sem notas ainda tem matrícula no banco mas
-                       zero lançamentos. Apagar a lista local causava o aluno desaparecer
-                       após reload. Se não vieram dados do banco, preservar o que está local. */
+                    /* Quando lancs = []: preserva lista local — alunos sem notas não são apagados */
                 } catch(e2) { console.warn("[SB] Erro periodo", periodo, nomeTurma, e2.message); }
             }
         }
