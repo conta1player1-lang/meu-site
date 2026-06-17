@@ -1,5 +1,5 @@
 /* Service Worker — A.V. Leitura em Foco v3 */
-const CACHE = 'av-leitura-v3';
+const CACHE = 'av-leitura-v4';
 const ASSETS = [
     '/index.html',
     '/main.css', '/componentes.css', '/temas.css',
@@ -40,3 +40,4 @@ self.addEventListener('fetch', e => {
         caches.match(e.request).then(cached => cached || fetch(e.request))
     );
 });
+/* v4 — force cache refresh */

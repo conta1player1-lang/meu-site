@@ -221,6 +221,16 @@
 [data-theme="dark"] .btn-toggle-lista { color: var(--texto-secundario); }
 [data-theme="dark"] .btn-toggle-lista:hover { background: var(--bg-hover); color: var(--cor-primaria); }
 
+/* Cards de evolução/apoio no dark mode */
+[data-theme="dark"] .evol-nome    { color: var(--texto-primario) !important; }
+[data-theme="dark"] .item-evolucao { border-bottom-color: var(--border-subtle) !important; }
+[data-theme="dark"] .evol-avatar  { background: var(--bg-hover) !important; color: var(--cor-primaria) !important; }
+[data-theme="dark"] .v-pos { color: #4ade80 !important; }
+[data-theme="dark"] .v-neg { color: #f87171 !important; }
+/* Textos dentro dos insight-cards (Consolidação, Evolução, Apoio) */
+[data-theme="dark"] .insight-subtitle { color: var(--texto-secundario) !important; }
+[data-theme="dark"] .insight-card p   { color: var(--texto-secundario) !important; }
+
 /* ══════════════════════════════════════════════════════════════
    DELTA DE COMPARAÇÃO
 ══════════════════════════════════════════════════════════════ */

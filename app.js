@@ -324,22 +324,24 @@ function getTextoRecomendacao(s) {
 function toggleSidebarMobile() {
     document.getElementById("sidebar").classList.toggle("mobile-open");
     document.getElementById("sidebar-overlay").classList.toggle("visible");
+    document.body.classList.toggle("sidebar-aberta",
+        document.getElementById("sidebar").classList.contains("mobile-open"));
 }
 function fecharSidebarMobile() {
     document.getElementById("sidebar").classList.remove("mobile-open");
     document.getElementById("sidebar-overlay").classList.remove("visible");
+    document.body.classList.remove("sidebar-aberta");
 }
 function detectarMobile() {
-    var isMobile = window.innerWidth <= 900;
-    var btn = document.getElementById("mobile-menu-btn");
-    if (btn) btn.style.display = isMobile ? "flex" : "none";
+    /* O botão de toggle agora é sempre o da sidebar (.toggle-sidebar)
+       Comportamento: no mobile abre/fecha como drawer; no desktop colapsa */
 }
 function toggleSidebar() {
     if (window.innerWidth <= 900) { toggleSidebarMobile(); return; }
     var sb = document.getElementById("sidebar");
     sb.classList.toggle("collapsed");
     document.getElementById("toggleIcon").className =
-        sb.classList.contains("collapsed") ? "fas fa-chevron-right" : "fas fa-bars";
+        sb.classList.contains("collapsed") ? "fas fa-bars" : "fas fa-bars";
 }
 
 /* ════════════════════════════════════════════════════════════════

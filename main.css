@@ -285,15 +285,29 @@ body {
 .sidebar .toggle-sidebar {
     display: flex;
     justify-content: flex-end;
+    align-items: center;
     padding: 14px 16px 10px;
     cursor: pointer;
     color: #94a3b8;
-    font-size: 16px;
+    font-size: 18px;
     flex-shrink: 0;
-    transition: color .2s;
+    transition: color .2s, background .2s;
+    border-radius: 8px;
+    margin: 4px 8px 0;
 }
-.sidebar .toggle-sidebar:hover { color: var(--primary); }
-.sidebar.collapsed .toggle-sidebar { justify-content: center; }
+.sidebar .toggle-sidebar:hover {
+    color: var(--primary);
+    background: rgba(99,102,241,0.08);
+}
+.sidebar.collapsed .toggle-sidebar {
+    justify-content: center;
+    margin: 4px 4px 0;
+}
+
+/* Mobile: botão flutuante na borda esquerda quando sidebar fechada */
+.sidebar-open-btn {
+    display: none;
+}
 
 /* ── Section labels ── */
 .sb-section-label {
@@ -1280,3 +1294,28 @@ td {
     0%, 100% { box-shadow: 0 0 0 1px rgba(220,38,38,0.15), 0 4px 14px rgba(220,38,38,0.10); }
     50%       { box-shadow: 0 0 0 2px rgba(220,38,38,0.3),  0 6px 22px rgba(220,38,38,0.20); }
 }
+
+/* ════════════════════════════════════════════════════════════════
+   BOTÃO FLUTUANTE — abre sidebar no mobile
+   Aparece somente quando sidebar está fechada em telas ≤ 900px
+════════════════════════════════════════════════════════════════ */
+.sidebar-open-btn {
+    display: none; /* oculto por padrão — JS e CSS mobile ativam */
+    position: fixed;
+    top: 14px;
+    left: 12px;
+    z-index: 501;
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+    background: var(--primary);
+    color: white;
+    border: none;
+    cursor: pointer;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+    transition: opacity .2s, transform .2s;
+}
+.sidebar-open-btn:hover { filter: brightness(1.1); }

@@ -11,9 +11,20 @@
         max-width: 100vw !important;
     }
 
-    /* Header: padding grande vaza no mobile */
+    /* Header: sem botão hambúrguer no header — botão flutuante na sidebar */
     .top-header {
         padding: 0 12px !important;
+    }
+
+    /* Botão flutuante: aparece em mobile */
+    .sidebar-open-btn { display: flex !important; }
+    /* Some quando sidebar está aberta */
+    body.sidebar-aberta .sidebar-open-btn { display: none !important; }
+
+    /* O toggle interno da sidebar fecha ela */
+    .sidebar .toggle-sidebar {
+        justify-content: flex-start !important;
+        padding: 14px 16px !important;
     }
 
     /* app-body e main-container contêm tudo */

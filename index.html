@@ -91,12 +91,6 @@
         </div>
 
         <header class="top-header">
-            <!-- Hambúrguer à esquerda — fica antes do logo no mobile -->
-            <button class="mobile-menu-btn" id="mobile-menu-btn"
-                    onclick="toggleSidebarMobile()" style="display:none;">
-                <i class="fas fa-bars"></i>
-            </button>
-
             <div class="logo-area">
                 <i class="fas fa-graduation-cap"></i>
                 <div class="logo-text">
@@ -130,10 +124,15 @@
         <!-- CORPO DO APP -->
         <div class="app-body">
 
+            <!-- Botão flutuante para abrir sidebar no mobile -->
+            <button class="sidebar-open-btn" id="sidebar-open-btn" onclick="toggleSidebarMobile()" aria-label="Abrir menu">
+                <i class="fas fa-bars"></i>
+            </button>
+
             <!-- ── SIDEBAR ── -->
             <aside class="sidebar" id="sidebar">
 
-                <!-- Toggle -->
+                <!-- Toggle — funciona igual desktop: abre/fecha -->
                 <div class="toggle-sidebar" onclick="toggleSidebar()" title="Recolher/Expandir menu">
                     <i class="fas fa-bars" id="toggleIcon"></i>
                 </div>
