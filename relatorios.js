@@ -962,12 +962,18 @@ function caRenderizarKPIs() {
         });
         /* Precisa de pelo menos 2 períodos lançados para afirmar estagnação */
         if (comDado.length < 2) return 0;
-        /* Conta a partir do penúltimo período (o último é somaUlt) */
+        /* Conta pares consecutivos de trás para frente onde o aluno não cresceu.
+           Par a par: se período[i] >= período[i+1] = não evoluiu naquele passo.
+           Para quando encontra um par onde o aluno cresceu. */
         var count = 0;
         for (var i = comDado.length - 2; i >= 0; i--) {
-            var s = calcularSomaAluno(turma, comDado[i].v, nome);
-            if (s === somaUlt) { count++; }
-            else { break; } /* quando encontra valor diferente, para */
+            var sAtual   = calcularSomaAluno(turma, comDado[i].v,   nome); /* período anterior */
+            var sProximo = calcularSomaAluno(turma, comDado[i+1].v, nome); /* período seguinte */
+            if (sAtual >= sProximo) {
+                count++; /* não cresceu neste passo */
+            } else {
+                break; /* cresceu aqui — sequência de estagnação termina */
+            }
         }
         return count;
     }
@@ -1159,11 +1165,11 @@ function caRenderizarKPIs() {
         if (!lista.length) return "<div style='font-size:11px;color:var(--texto-desabilitado);text-align:center;padding:10px 0;'>Nenhum aluno</div>";
         var uid = "kpi-vm-" + (++_kpiVerMaisId);
         var rows = lista.map(function(d, i) {
-            var infoBottom = "<span style='font-size:10px;color:var(--texto-desabilitado);font-weight:500;'>" + d.turma + "</span>";
+            var infoBottom = "<span style='font-size:10px;color:var(--texto-secundario);font-weight:600;'>" + d.turma + "</span>";
             var evoRight = labelFn
                 ? "<span style='font-weight:800;font-size:12px;flex-shrink:0;line-height:1.3;text-align:right;color:" + (d.evo>0?"#10b981":d.evo<0?"#ef4444":"#94a3b8") + ";'>" + labelFn(d) + "</span>"
                 : "";
-            return "<div class='kpi-item-row' data-kpi-grp='" + uid + "' style='display:" + (i<3?"flex":"none") + ";align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid #f8fafc;flex-shrink:0;'>"
+            return "<div class='kpi-item-row' data-kpi-grp='" + uid + "' style='display:" + (i<3?"flex":"none") + ";align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border-subtle);flex-shrink:0;'>"
                 + avatarHtml(d.nome, d.fotoUrl, 38)
                 + "<div style='flex:1;min-width:0;'>"
                 + "<div style='font-size:12px;font-weight:700;color:var(--texto-primario);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;'>" + d.nome + "</div>"

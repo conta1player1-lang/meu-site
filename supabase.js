@@ -732,14 +732,47 @@ async function sbSalvarNota(nomeAluno, nomeTurma, periodo, habIdx, valor) {
     try {
         var turmaId = await sbResolverTurmaId(nomeTurma);
         if (!turmaId) return false;
+
         var matriculaId = await sbResolverMatriculaId(nomeAluno, turmaId);
         if (!matriculaId) {
             console.warn("[sbSalvarNota] Matrícula não encontrada para", nomeAluno, nomeTurma);
             return false;
         }
-        /* Obtém aluno_id via matrícula já resolvida — evita busca por nome (risco de homônimos) */
-        var _matRow = await window.sbClient.from("matriculas").select("aluno_id").eq("id", matriculaId).single();
+
+        /* MUDANÇA 1: maybeSingle() em vez de single() — evita 406 quando ID é fantasma */
+        var _matRow = await window.sbClient.from("matriculas")
+            .select("aluno_id").eq("id", matriculaId).maybeSingle();
+
         var alunoId = (_matRow.data && _matRow.data.aluno_id) || null;
+
+        /* MUDANÇA 2: se alunoId veio null, o cache tem um ID fantasma.
+           Invalida o cache desse aluno e tenta resolver a matrícula novamente do banco. */
+        if (!alunoId) {
+            console.warn("[sbSalvarNota] Cache fantasma detectado para", nomeAluno, "— invalidando e retentando...");
+            /* Limpa entradas do cache relacionadas a este aluno */
+            var anoId = alGetAnoSelecionadoId();
+            var chave        = "mat|" + turmaId + "|" + (anoId || "") + "|" + nomeAluno;
+            var chaveSimples = turmaId + "|" + nomeAluno;
+            delete _cacheAlunos[chave];
+            delete _cacheAlunos[chaveSimples];
+
+            /* Segunda tentativa: busca matrícula direto do banco */
+            matriculaId = await sbResolverMatriculaId(nomeAluno, turmaId);
+            if (!matriculaId) {
+                console.warn("[sbSalvarNota] Matrícula não encontrada mesmo após reinvalidação:", nomeAluno);
+                return false;
+            }
+            /* Busca alunoId da nova matrícula */
+            var _matRow2 = await window.sbClient.from("matriculas")
+                .select("aluno_id").eq("id", matriculaId).maybeSingle();
+            alunoId = (_matRow2.data && _matRow2.data.aluno_id) || null;
+
+            if (!alunoId) {
+                console.warn("[sbSalvarNota] alunoId ainda null após retentativa:", nomeAluno);
+                return false;
+            }
+        }
+
         var payload = {
             matricula_id:  matriculaId,
             aluno_id:      alunoId,
@@ -747,6 +780,7 @@ async function sbSalvarNota(nomeAluno, nomeTurma, periodo, habIdx, valor) {
             atualizado_em: new Date().toISOString()
         };
         payload["hab_" + habIdx] = (valor === "" || valor === null) ? null : parseInt(valor);
+
         var r = await window.sbClient.from("lancamentos")
             .upsert([payload], { onConflict: "matricula_id,periodo" }).select().single();
         if (r.error) throw r.error;
