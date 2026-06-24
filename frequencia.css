@@ -568,9 +568,10 @@
         padding: 0 !important;
     }
 
-    /* Altura das linhas: 24px */
-    .freq-table td,
-    .freq-table th { height: 24px !important; }
+    /* Cabeçalho das datas: +4px para respirar e mostrar números maiores */
+    .freq-table th { height: 28px !important; }
+    /* Linhas dos alunos: -1px mais compactas */
+    .freq-table td { height: 23px !important; }
 
     /* Cabeçalho azul da tabela */
     .freq-th-main {
