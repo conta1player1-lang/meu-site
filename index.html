@@ -21,6 +21,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/mammoth@1.6.0/mammoth.browser.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="frequencia.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
 
     <!-- Estilos do sistema -->
@@ -1742,6 +1743,130 @@
 
     <script src="rotinas.js"></script>
     <script src="configuracoes.js"></script>
+
+    <script src="frequencia.js"></script>
+    <!-- ══════════════════════════════════════════════════════
+         MÓDULO FREQUÊNCIA — Ctrl+Shift+F
+         Isolado do sistema. Sempre tema claro.
+    ══════════════════════════════════════════════════════ -->
+    <div id="modal-frequencia" role="dialog" aria-modal="true" aria-label="Frequência da Turma">
+
+        <div class="freq-container">
+
+            <!-- CABEÇALHO AZUL -->
+            <div class="freq-header">
+                <div class="freq-header-left">
+                    <div class="freq-header-icon">
+                        <i class="fas fa-calendar-check" style="color:#1e40af;font-size:20px;"></i>
+                    </div>
+                    <div>
+                        <div class="freq-header-title">FREQUÊNCIA DA TURMA</div>
+                        <div class="freq-header-sub">Registro diário de presença</div>
+                    </div>
+                </div>
+                <div class="freq-header-actions">
+                    <button class="freq-btn-header" onclick="freqMudarAba('config')" title="Configurar dias letivos">
+                        <i class="fas fa-calendar-alt"></i> CONFIGURAR DIAS
+                    </button>
+                    <button class="freq-btn-header" onclick="freqImprimir()" title="Imprimir frequência">
+                        <i class="fas fa-print"></i> IMPRIMIR
+                    </button>
+                    <button class="freq-btn-header freq-btn-fechar" onclick="fecharFrequencia()" title="Fechar (ESC)">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- CARDS INFORMATIVOS -->
+            <div class="freq-info-grid">
+                <div class="freq-info-card">
+                    <div class="freq-info-icon escola"><i class="fas fa-school"></i></div>
+                    <div>
+                        <div class="freq-info-label">Escola</div>
+                        <div class="freq-info-val" id="freq-val-escola">—</div>
+                    </div>
+                </div>
+                <div class="freq-info-card">
+                    <div class="freq-info-icon prof"><i class="fas fa-user-tie"></i></div>
+                    <div>
+                        <div class="freq-info-label">Professor(a)</div>
+                        <div class="freq-info-val" id="freq-val-prof">—</div>
+                    </div>
+                </div>
+                <div class="freq-info-card">
+                    <div class="freq-info-icon turma"><i class="fas fa-users"></i></div>
+                    <div>
+                        <div class="freq-info-label">Turma</div>
+                        <div class="freq-info-val" id="freq-val-turma">—</div>
+                    </div>
+                </div>
+                <div class="freq-info-card">
+                    <div class="freq-info-icon periodo"><i class="fas fa-calendar-week"></i></div>
+                    <div>
+                        <div class="freq-info-label">Período</div>
+                        <div class="freq-info-val" id="freq-val-periodo">—</div>
+                    </div>
+                </div>
+                <div class="freq-info-card">
+                    <div class="freq-info-icon dias"><i class="fas fa-sun"></i></div>
+                    <div>
+                        <div class="freq-info-label">Dias Letivos</div>
+                        <div class="freq-info-val" id="freq-val-dias">0 dias</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ABAS -->
+            <div class="freq-tabs">
+                <button class="freq-tab ativa" data-aba="frequencia" onclick="freqMudarAba('frequencia')">
+                    <i class="fas fa-table"></i> FREQUÊNCIA
+                </button>
+                <button class="freq-tab" data-aba="config" onclick="freqMudarAba('config')">
+                    <i class="fas fa-calendar-alt"></i> CONFIGURAR DIAS
+                </button>
+            </div>
+
+            <!-- ABA: FREQUÊNCIA -->
+            <div class="freq-aba ativa" data-aba="frequencia">
+                <div class="freq-table-wrap" id="freq-table-wrap">
+                    <div style="padding:40px;text-align:center;color:#94a3b8;font-size:13px;font-weight:600;">
+                        <i class="fas fa-calendar-alt" style="font-size:32px;margin-bottom:12px;display:block;opacity:.3;"></i>
+                        Configure os dias letivos na aba <strong>CONFIGURAR DIAS</strong> para gerar a folha de frequência.
+                    </div>
+                </div>
+            </div>
+
+            <!-- ABA: CONFIGURAR DIAS -->
+            <div class="freq-aba" data-aba="config">
+                <div class="freq-config-wrap">
+                    <div class="freq-config-titulo">Selecione os dias letivos</div>
+                    <div class="freq-config-sub">Clique nos dias de aula. Sábados e domingos são desabilitados automaticamente. As datas ficam salvas para esta turma e período.</div>
+                    <div class="freq-calendarios" id="freq-calendarios"></div>
+                    <div class="freq-config-footer">
+                        <div class="freq-dias-selecionados-info">
+                            <i class="fas fa-check-circle" style="color:#10b981;margin-right:6px;"></i>
+                            <span id="freq-total-dias">0 dias letivos selecionados</span>
+                        </div>
+                        <div style="display:flex;gap:10px;">
+                            <button class="freq-btn danger" onclick="freqLimparDatas()">
+                                <i class="fas fa-trash"></i> Limpar tudo
+                            </button>
+                            <button class="freq-btn primary" onclick="freqMudarAba('frequencia')">
+                                <i class="fas fa-table"></i> Ver frequência
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+
+
+        </div><!-- /freq-container -->
+
+        <!-- Toast de feedback -->
+        <div class="freq-toast" id="freq-toast"></div>
+
+    </div><!-- /modal-frequencia -->
 
     <script>
         if ('serviceWorker' in navigator) {

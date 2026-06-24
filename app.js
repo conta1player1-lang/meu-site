@@ -321,54 +321,25 @@ function getTextoRecomendacao(s) {
 /* ════════════════════════════════════════════════════════════════
    SIDEBAR / MOBILE
 ════════════════════════════════════════════════════════════════ */
-/* ════════════════════════════════════════════════════════════════
-   SIDEBAR — lógica unificada
-   Desktop  (>900px): colapsa/expande inline (toggle-sidebar no topo da sidebar)
-   Mobile  (≤900px) : drawer com overlay    (header-hamburger abre, toggle fecha)
-════════════════════════════════════════════════════════════════ */
-var SB_MOBILE_MAX = 900; /* único breakpoint — igual ao CSS */
-
-function isMobileView() {
-    return window.innerWidth <= SB_MOBILE_MAX;
-}
-
-/* Abre/fecha drawer mobile */
 function toggleSidebarMobile() {
-    var sb  = document.getElementById("sidebar");
-    var ov  = document.getElementById("sidebar-overlay");
-    var aberta = sb.classList.toggle("mobile-open");
-    ov.classList.toggle("visible", aberta);
-    document.body.classList.toggle("sidebar-aberta", aberta);
+    document.getElementById("sidebar").classList.toggle("mobile-open");
+    document.getElementById("sidebar-overlay").classList.toggle("visible");
 }
-
-/* Fecha drawer mobile explicitamente */
 function fecharSidebarMobile() {
-    var sb = document.getElementById("sidebar");
-    var ov = document.getElementById("sidebar-overlay");
-    sb.classList.remove("mobile-open");
-    ov.classList.remove("visible");
-    document.body.classList.remove("sidebar-aberta");
+    document.getElementById("sidebar").classList.remove("mobile-open");
+    document.getElementById("sidebar-overlay").classList.remove("visible");
 }
-
-/* Botão dos 3 traços (toggle-sidebar dentro da sidebar) */
+function detectarMobile() {
+    var isMobile = window.innerWidth <= 768;
+    var btn = document.getElementById("mobile-menu-btn");
+    if (btn) btn.style.display = isMobile ? "flex" : "none";
+}
 function toggleSidebar() {
-    if (isMobileView()) {
-        /* No mobile: o toggle-sidebar fecha o drawer */
-        fecharSidebarMobile();
-        return;
-    }
-    /* Desktop: colapsa/expande sidebar inline */
+    if (window.innerWidth <= 768) { toggleSidebarMobile(); return; }
     var sb = document.getElementById("sidebar");
     sb.classList.toggle("collapsed");
-}
-
-/* Ajusta visibilidade do hambúrguer no header conforme tamanho */
-function detectarMobile() {
-    var ham = document.getElementById("header-hamburger");
-    if (!ham) return;
-    ham.style.display = isMobileView() ? "flex" : "none";
-    /* No desktop: garante que drawer está fechado */
-    if (!isMobileView()) fecharSidebarMobile();
+    document.getElementById("toggleIcon").className =
+        sb.classList.contains("collapsed") ? "fas fa-chevron-right" : "fas fa-bars";
 }
 
 /* ════════════════════════════════════════════════════════════════
@@ -451,7 +422,7 @@ function trocarAba(nome, event) {
     if (nome === "atividades")    setTimeout(atvRenderizar, 50);
     if (nome === "configuracoes") setTimeout(cfgIniciar, 50);
     if (nome === "rotinas")       setTimeout(rotIniciar, 50);
-    if (isMobileView()) fecharSidebarMobile();
+    if (window.innerWidth <= 768) fecharSidebarMobile();
 }
 
 /* ════════════════════════════════════════════════════════════════
@@ -501,7 +472,7 @@ function carregar() {
             }
         }
         var acaoBtn = soLeitura ? "" :
-"<i class=\"fas fa-pencil-alt\" style=\"color:var(--cor-primaria);cursor:pointer;font-size:15px;\" title=\"Editar aluno\" onclick=\"abrirModalEditarAluno('" + nome + "')\"></i>";
+"<i class=\"fas fa-trash-alt\" style=\"color:var(--cor-perigo);cursor:pointer;\" onclick=\"abrirModalDel('" + nome + "')\"></i>";
         html += "<td><b>"+sa+"</b></td>"
              + "<td><span class=\"badge-nivel "+nv.cls+"\">"+nv.txt+"</span></td>"
              + "<td>" + acaoBtn + "</td></tr>";
@@ -562,51 +533,33 @@ function atualizarRodape(totaisAtual, n) {
 }
 
 function atualizarGraficoPrincipal(c) {
-    var cont = document.getElementById("grafico-niveis-barras");
-    if (!cont) return;
-
-    var niveis = [
-        { key: "Pré-leitor 1",    cls: "pre1",      cor: "#ef4444", emoji: "🌱" },
-        { key: "Pré-leitor 2",    cls: "pre2",      cor: "#fb923c", emoji: "🌿" },
-        { key: "Leitor iniciante",cls: "iniciante", cor: "#eab308", emoji: "🌳" },
-        { key: "Leitor avançado", cls: "avancado",  cor: "#16a34a", emoji: "🍎" },
-        { key: "Leitor fluente",  cls: "fluente",   cor: "#2563eb", emoji: "⭐" }
-    ];
-
-    var total = Object.values(c).reduce(function(a,b){ return a+b; }, 0);
-
-    if (total === 0) {
-        cont.innerHTML = "<p style='font-size:11px;color:var(--texto-desabilitado);text-align:center;padding:20px 0;'>Nenhum aluno cadastrado</p>";
-        return;
+    var ctx = document.getElementById("grafico-doughnut").getContext("2d");
+    if (graficoPrincipal) {
+        graficoPrincipal.data.labels           = Object.keys(c);
+        graficoPrincipal.data.datasets[0].data = Object.values(c);
+        graficoPrincipal.update();
+    } else {
+        graficoPrincipal = new Chart(ctx, {
+            type: "doughnut",
+            data: {
+                labels:   Object.keys(c),
+                datasets: [{ data: Object.values(c), backgroundColor: ["#ef4444","#fb923c","#facc15","#16a34a","#2563eb"] }]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                plugins: {
+                    legend: { position:"right", labels:{ boxWidth:10, font:{ size:9 } } },
+                    datalabels: {
+                        color:"#fff", font:{ weight:"bold", size:10 },
+                        formatter: function(value, ctx2) {
+                            var t = ctx2.dataset.data.reduce(function(a,b){return a+b;},0);
+                            return t>0 ? ((value*100)/t).toFixed(0)+"%" : "";
+                        }
+                    }
+                }
+            }
+        });
     }
-
-    var html = "";
-    niveis.forEach(function(n) {
-        var qtd = c[n.key] || 0;
-        var pct = total > 0 ? Math.round((qtd / total) * 100) : 0;
-        if (qtd === 0) return; /* oculta níveis zerados */
-
-        html += '<div style="display:flex;align-items:center;gap:8px;">'
-              /* ícone + label */
-              + '<div style="display:flex;align-items:center;gap:5px;min-width:130px;">'
-              + '<span style="width:24px;height:24px;border-radius:6px;background:' + n.cor + '1a;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:13px;line-height:1;">'
-              + n.emoji + '</span>'
-              + '<span style="font-size:11px;font-weight:600;color:var(--texto-primario);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + n.key + '</span>'
-              + '</div>'
-              /* barra de progresso */
-              + '<div style="flex:1;height:18px;background:var(--bg-secundario);border-radius:20px;overflow:hidden;position:relative;">'
-              + '<div style="height:100%;width:' + pct + '%;background:' + n.cor + ';border-radius:20px;transition:width .6s cubic-bezier(.4,0,.2,1);min-width:' + (pct>0?'18':'0') + 'px;">'
-              + '</div>'
-              + '</div>'
-              /* porcentagem + contagem */
-              + '<div style="min-width:52px;text-align:right;line-height:1.2;">'
-              + '<span style="font-size:13px;font-weight:800;color:' + n.cor + ';">' + pct + '%</span>'
-              + '<span style="font-size:10px;color:var(--texto-desabilitado);display:block;">' + qtd + ' aluno' + (qtd>1?'s':'') + '</span>'
-              + '</div>'
-              + '</div>';
-    });
-
-    cont.innerHTML = html;
 }
 
 function processarEvolucao() {
@@ -746,49 +699,6 @@ function abrirModalDel(nome) {
         carregar();
         fecharModal();
     };
-}
-
-function abrirModalEditarAluno(nome) {
-    if (!verificarPermissaoEdicao()) return;
-    var m = document.getElementById("modal-editar-aluno");
-    if (!m) return;
-
-    /* Preenche nome (somente exibição) */
-    var spanNome = document.getElementById("ea-nome-aluno");
-    if (spanNome) spanNome.textContent = nome;
-
-    /* Salva nome no dataset do modal para uso posterior */
-    m.dataset.nomeAluno = nome;
-
-    /* Reseta foto preview */
-    var prev = document.getElementById("ea-foto-preview");
-    if (prev) prev.innerHTML = "<i class='fas fa-user'></i>";
-    var fi = document.getElementById("ea-foto-input");
-    if (fi) fi.value = "";
-    window._eaFotoArquivo = null;
-
-    /* Tenta carregar foto do cache */
-    var turma = getTurmaAtual();
-    var turmaId = null;
-    /* Busca foto via cache _cacheAlunos se disponível */
-    for (var k in _cacheAlunos) {
-        if (k.endsWith("|" + nome)) {
-            var cached = _cacheAlunos[k];
-            if (cached && cached.foto_url) {
-                if (prev) prev.innerHTML = "<img src='" + cached.foto_url + "' style='width:100%;height:100%;object-fit:cover;border-radius:50%;'>";
-            }
-            break;
-        }
-    }
-
-    /* Abre modal */
-    m.classList.add("visible");
-}
-
-function fecharModalEditarAluno() {
-    var m = document.getElementById("modal-editar-aluno");
-    if (m) m.classList.remove("visible");
-    window._eaFotoArquivo = null;
 }
 
 function abrirModalImport() {
@@ -1096,10 +1006,6 @@ async function inicializarApp() {
     atualizarBotoesHeader("lancamentos");
     detectarMobile();
     window.addEventListener("resize", detectarMobile);
-    window.addEventListener("orientationchange", function() {
-        setTimeout(detectarMobile, 150); /* aguarda orientação estabilizar */
-        fecharSidebarMobile(); /* fecha sidebar ao girar */
-    });
     cfgCarregarFotoDoUsuarioLogado();
 
     if (window.sbOnline) {

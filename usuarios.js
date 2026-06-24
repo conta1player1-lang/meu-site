@@ -225,16 +225,6 @@ async function fazerLogin() {
     /* Preenche a tela de carregamento com nome e saudação do usuário */
     if (typeof avlPreencherTela === "function") avlPreencherTela(usuario);
 
-    /* Carrega foto do professor do banco (fotos_professores) para todos os dispositivos */
-    if (window.sbClient && window.sbOnline && usuario.id) {
-        sbCarregarFotoProfessor(usuario.id).then(function(urlPublica) {
-            if (urlPublica) {
-                cfgAplicarFotoHeader(urlPublica);
-                localStorage.setItem("foto_usuario_" + usuario.id, urlPublica);
-            }
-        }).catch(function() {});
-    }
-
     document.getElementById("login-screen").classList.add("hidden");
     document.getElementById("main-app").style.display = "flex";
 
@@ -495,20 +485,8 @@ function cfgAplicarFotoHeader(dataUrl) {
 async function cfgCarregarFotoDoUsuarioLogado() {
     var u = getUsuarioLogado();
     if (!u) return;
-
-    /* 1. Aplica cache local imediatamente (sem esperar rede) */
-    var fotoLocal = u.foto_url || localStorage.getItem("foto_usuario_" + u.id);
+    if (u.foto_url) { cfgAplicarFotoHeader(u.foto_url); return; }
+    var fotoLocal = localStorage.getItem("foto_usuario_" + u.id);
     if (fotoLocal) cfgAplicarFotoHeader(fotoLocal);
-
-    /* 2. Sempre busca do banco para garantir foto atualizada em qualquer dispositivo */
-    if (window.sbClient && window.sbOnline && u.id) {
-        try {
-            var urlPublica = await sbCarregarFotoProfessor(u.id);
-            if (urlPublica) {
-                cfgAplicarFotoHeader(urlPublica);
-                localStorage.setItem("foto_usuario_" + u.id, urlPublica);
-            }
-        } catch(e) {}
-    }
 }
 

@@ -732,47 +732,14 @@ async function sbSalvarNota(nomeAluno, nomeTurma, periodo, habIdx, valor) {
     try {
         var turmaId = await sbResolverTurmaId(nomeTurma);
         if (!turmaId) return false;
-
         var matriculaId = await sbResolverMatriculaId(nomeAluno, turmaId);
         if (!matriculaId) {
             console.warn("[sbSalvarNota] Matrícula não encontrada para", nomeAluno, nomeTurma);
             return false;
         }
-
-        /* MUDANÇA 1: maybeSingle() em vez de single() — evita 406 quando ID é fantasma */
-        var _matRow = await window.sbClient.from("matriculas")
-            .select("aluno_id").eq("id", matriculaId).maybeSingle();
-
+        /* Obtém aluno_id via matrícula já resolvida — evita busca por nome (risco de homônimos) */
+        var _matRow = await window.sbClient.from("matriculas").select("aluno_id").eq("id", matriculaId).single();
         var alunoId = (_matRow.data && _matRow.data.aluno_id) || null;
-
-        /* MUDANÇA 2: se alunoId veio null, o cache tem um ID fantasma.
-           Invalida o cache desse aluno e tenta resolver a matrícula novamente do banco. */
-        if (!alunoId) {
-            console.warn("[sbSalvarNota] Cache fantasma detectado para", nomeAluno, "— invalidando e retentando...");
-            /* Limpa entradas do cache relacionadas a este aluno */
-            var anoId = alGetAnoSelecionadoId();
-            var chave        = "mat|" + turmaId + "|" + (anoId || "") + "|" + nomeAluno;
-            var chaveSimples = turmaId + "|" + nomeAluno;
-            delete _cacheAlunos[chave];
-            delete _cacheAlunos[chaveSimples];
-
-            /* Segunda tentativa: busca matrícula direto do banco */
-            matriculaId = await sbResolverMatriculaId(nomeAluno, turmaId);
-            if (!matriculaId) {
-                console.warn("[sbSalvarNota] Matrícula não encontrada mesmo após reinvalidação:", nomeAluno);
-                return false;
-            }
-            /* Busca alunoId da nova matrícula */
-            var _matRow2 = await window.sbClient.from("matriculas")
-                .select("aluno_id").eq("id", matriculaId).maybeSingle();
-            alunoId = (_matRow2.data && _matRow2.data.aluno_id) || null;
-
-            if (!alunoId) {
-                console.warn("[sbSalvarNota] alunoId ainda null após retentativa:", nomeAluno);
-                return false;
-            }
-        }
-
         var payload = {
             matricula_id:  matriculaId,
             aluno_id:      alunoId,
@@ -780,7 +747,6 @@ async function sbSalvarNota(nomeAluno, nomeTurma, periodo, habIdx, valor) {
             atualizado_em: new Date().toISOString()
         };
         payload["hab_" + habIdx] = (valor === "" || valor === null) ? null : parseInt(valor);
-
         var r = await window.sbClient.from("lancamentos")
             .upsert([payload], { onConflict: "matricula_id,periodo" }).select().single();
         if (r.error) throw r.error;
@@ -1212,29 +1178,6 @@ async function sbSincronizarTudo() {
         inicializarTurmas();
     } catch(e) { console.warn("[SB] Turmas nao sincronizadas:", e.message); }
 
-    /* Alunos matriculados — garante que alunos sem lançamentos também sejam restaurados */
-    try {
-        var turmas = getTurmasStorage();
-        var periodoAtual = normalizarPeriodo(getPeriodo ? getPeriodo() : (periodosArr[0] ? periodosArr[0].v : ""));
-        for (var tai = 0; tai < turmas.length; tai++) {
-            var tObjA     = turmas[tai];
-            var nomeTurmaA = normalizarTurma((typeof tObjA === "object") ? tObjA.nome : tObjA);
-            try {
-                var alunosDb = await sbBuscarAlunos(nomeTurmaA);
-                if (alunosDb && alunosDb.length > 0) {
-                    /* Mescla: une alunos do banco com alunos locais (sem duplicar) */
-                    var nomesDb    = alunosDb.map(function(a){ return normalizarAluno(a.nome); });
-                    var nomesLocal = JSON.parse(localStorage.getItem(chaveAlunos(nomeTurmaA, periodoAtual)) || "[]");
-                    var merged     = Array.from(new Set(nomesDb.concat(nomesLocal)))
-                                         .filter(Boolean)
-                                         .sort(function(a,b){ return a.localeCompare(b,"pt-BR"); });
-                    localStorage.setItem(chaveAlunos(nomeTurmaA, periodoAtual), JSON.stringify(merged));
-                }
-            } catch(eA) { console.warn("[SB] Alunos nao sincronizados para", nomeTurmaA, eA.message); }
-        }
-        console.log("[SB] Alunos matriculados sincronizados.");
-    } catch(e) { console.warn("[SB] Sync alunos falhou:", e.message); }
-
     /* Lançamentos — via matriculas do ano selecionado */
     try {
         var turmas = getTurmasStorage();
@@ -1251,12 +1194,7 @@ async function sbSincronizarTudo() {
                         var nomes = lancs.map(function(l) { return normalizarAluno(l.aluno_nome); })
                             .filter(Boolean)
                             .sort(function(a, b) { return a.localeCompare(b, "pt-BR"); });
-                        /* Mescla com lista já existente (preserva alunos sem lançamentos) */
-                        var nomesExist = JSON.parse(localStorage.getItem(chaveAlunos(nomeTurma, periodo)) || "[]");
-                        var mergedLanc = Array.from(new Set(nomes.concat(nomesExist)))
-                                             .filter(Boolean)
-                                             .sort(function(a,b){ return a.localeCompare(b,"pt-BR"); });
-                        localStorage.setItem(chaveAlunos(nomeTurma, periodo), JSON.stringify(mergedLanc));
+                        localStorage.setItem(chaveAlunos(nomeTurma, periodo), JSON.stringify(nomes));
                         lancs.forEach(function(l) {
                             var nomeAluno = normalizarAluno(l.aluno_nome);
                             if (!nomeAluno) return;
@@ -1268,7 +1206,10 @@ async function sbSincronizarTudo() {
                             }
                         });
                     }
-                    /* Quando lancs = []: preserva lista local — alunos sem notas não são apagados */
+                    /* CORREÇÃO: quando lancs = [] NÃO sobrescrever o localStorage com [].
+                       Um aluno recém-cadastrado sem notas ainda tem matrícula no banco mas
+                       zero lançamentos. Apagar a lista local causava o aluno desaparecer
+                       após reload. Se não vieram dados do banco, preservar o que está local. */
                 } catch(e2) { console.warn("[SB] Erro periodo", periodo, nomeTurma, e2.message); }
             }
         }

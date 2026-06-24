@@ -1,5 +1,5 @@
 /* Service Worker — A.V. Leitura em Foco v3 */
-const CACHE = 'av-leitura-v8';
+const CACHE = 'av-leitura-v13';
 const ASSETS = [
     '/index.html',
     '/main.css', '/componentes.css', '/temas.css',
@@ -7,6 +7,7 @@ const ASSETS = [
     '/app.js', '/usuarios.js', '/supabase.js', '/relatorios.js',
     '/atividades.js', '/rotinas.js', '/configuracoes.js',
     '/mensagens.js', '/loading.js', '/notifications.js',
+    '/frequencia.js', '/frequencia.css',
     '/manifest.json',
     '/icon-192.png', '/icon-512.png', '/apple-touch-icon.png'
 ];

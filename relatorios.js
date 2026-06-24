@@ -962,18 +962,12 @@ function caRenderizarKPIs() {
         });
         /* Precisa de pelo menos 2 períodos lançados para afirmar estagnação */
         if (comDado.length < 2) return 0;
-        /* Conta pares consecutivos de trás para frente onde o aluno não cresceu.
-           Par a par: se período[i] >= período[i+1] = não evoluiu naquele passo.
-           Para quando encontra um par onde o aluno cresceu. */
+        /* Conta a partir do penúltimo período (o último é somaUlt) */
         var count = 0;
         for (var i = comDado.length - 2; i >= 0; i--) {
-            var sAtual   = calcularSomaAluno(turma, comDado[i].v,   nome); /* período anterior */
-            var sProximo = calcularSomaAluno(turma, comDado[i+1].v, nome); /* período seguinte */
-            if (sAtual >= sProximo) {
-                count++; /* não cresceu neste passo */
-            } else {
-                break; /* cresceu aqui — sequência de estagnação termina */
-            }
+            var s = calcularSomaAluno(turma, comDado[i].v, nome);
+            if (s === somaUlt) { count++; }
+            else { break; } /* quando encontra valor diferente, para */
         }
         return count;
     }
@@ -1165,11 +1159,11 @@ function caRenderizarKPIs() {
         if (!lista.length) return "<div style='font-size:11px;color:var(--texto-desabilitado);text-align:center;padding:10px 0;'>Nenhum aluno</div>";
         var uid = "kpi-vm-" + (++_kpiVerMaisId);
         var rows = lista.map(function(d, i) {
-            var infoBottom = "<span style='font-size:10px;color:var(--texto-secundario);font-weight:600;'>" + d.turma + "</span>";
+            var infoBottom = "<span style='font-size:10px;color:var(--texto-desabilitado);font-weight:500;'>" + d.turma + "</span>";
             var evoRight = labelFn
                 ? "<span style='font-weight:800;font-size:12px;flex-shrink:0;line-height:1.3;text-align:right;color:" + (d.evo>0?"#10b981":d.evo<0?"#ef4444":"#94a3b8") + ";'>" + labelFn(d) + "</span>"
                 : "";
-            return "<div class='kpi-item-row' data-kpi-grp='" + uid + "' style='display:" + (i<3?"flex":"none") + ";align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border-subtle);flex-shrink:0;'>"
+            return "<div class='kpi-item-row' data-kpi-grp='" + uid + "' style='display:" + (i<3?"flex":"none") + ";align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid #f8fafc;flex-shrink:0;'>"
                 + avatarHtml(d.nome, d.fotoUrl, 38)
                 + "<div style='flex:1;min-width:0;'>"
                 + "<div style='font-size:12px;font-weight:700;color:var(--texto-primario);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;'>" + d.nome + "</div>"
@@ -1599,143 +1593,4 @@ function fecharModalAddAlunoFoto() {
     var fi = document.getElementById("ca-foto-input");
     if (fi) fi.value = "";
 
-}
-/* ════════════════════════════════════════════════════════════════
-   MODAL EDITAR ALUNO — foto + remover
-════════════════════════════════════════════════════════════════ */
-var _eaFotoArquivo = null;
-
-function eaPreviewFoto(input) {
-    var file = input.files[0];
-    if (!file) return;
-    if (file.size > 2 * 1024 * 1024) {
-        mostrarModalAviso("Arquivo muito grande", "A foto deve ter no máximo 2 MB.");
-        input.value = "";
-        return;
-    }
-    var ext = file.name.split(".").pop().toLowerCase();
-    if (!["jpg","jpeg","png","webp"].includes(ext)) {
-        mostrarModalAviso("Formato inválido", "Aceitos: JPG, JPEG, PNG, WEBP.");
-        input.value = "";
-        return;
-    }
-    _eaFotoArquivo = file;
-    window._eaFotoArquivo = file;
-    var reader = new FileReader();
-    reader.onload = function(e) {
-        var prev = document.getElementById("ea-foto-preview");
-        if (prev) prev.innerHTML = "<img src='" + e.target.result + "' style='width:100%;height:100%;object-fit:cover;border-radius:50%;'>";
-    };
-    reader.readAsDataURL(file);
-}
-
-function eaRemoverFoto() {
-    window._eaFotoArquivo = null;
-    _eaFotoArquivo = null;
-    var fi = document.getElementById("ea-foto-input");
-    if (fi) fi.value = "";
-    var prev = document.getElementById("ea-foto-preview");
-    if (prev) prev.innerHTML = "<i class='fas fa-user'></i>";
-    /* Marca para remoção no banco */
-    var m = document.getElementById("modal-editar-aluno");
-    if (m) m.dataset.removerFoto = "1";
-}
-
-async function eaSalvarFoto() {
-    var m = document.getElementById("modal-editar-aluno");
-    if (!m) return;
-    var nome = m.dataset.nomeAluno;
-    if (!nome) return;
-
-    /* Localiza id do aluno no cache */
-    var alunoId = null;
-    for (var k in _cacheAlunos) {
-        if (k.endsWith("|" + nome)) { alunoId = _cacheAlunos[k].id; break; }
-    }
-
-    /* Se não achou no cache, busca no banco */
-    if (!alunoId && window.sbClient && window.sbOnline) {
-        try {
-            var ra = await window.sbClient.from("alunos").select("id").eq("nome", nome).maybeSingle();
-            if (ra.data) alunoId = ra.data.id;
-        } catch(e) {}
-    }
-
-    var arquivo = window._eaFotoArquivo || _eaFotoArquivo;
-    var removerFoto = m.dataset.removerFoto === "1";
-
-    if (!arquivo && !removerFoto) {
-        mostrarModalAviso("Sem alterações", "Nenhuma foto foi selecionada.");
-        return;
-    }
-
-    if (removerFoto && alunoId && window.sbClient && window.sbOnline) {
-        mostrarLoadingSimples("Removendo foto...");
-        try {
-            await sbAtualizarFotoAluno(alunoId, null);
-            /* Atualiza cache */
-            for (var k in _cacheAlunos) {
-                if (k.endsWith("|" + nome)) { _cacheAlunos[k].foto_url = null; break; }
-            }
-            delete m.dataset.removerFoto;
-        } catch(e) { console.warn("[eaSalvarFoto] remover foto:", e); }
-        finally { ocultarLoadingSimples(); }
-        fecharModalEditarAluno();
-        mostrarModalAviso("Foto removida", "A foto do aluno foi removida.");
-        carregar();
-        return;
-    }
-
-    if (arquivo && window.sbClient && window.sbOnline) {
-        mostrarLoadingSimples("Enviando foto...");
-        try {
-            function _sanitizarPath(s) {
-                var map = {'á':'a','à':'a','â':'a','ã':'a','é':'e','è':'e','ê':'e','í':'i','ì':'i','î':'i','ó':'o','ò':'o','ô':'o','õ':'o','ú':'u','ù':'u','û':'u','ç':'c','ñ':'n','Á':'A','À':'A','Â':'A','Ã':'A','É':'E','È':'E','Ê':'E','Í':'I','Ó':'O','Ô':'O','Õ':'O','Ú':'U','Ç':'C'};
-                return s.split('').map(function(c){ return map[c]||c; }).join('').replace(/[^a-zA-Z0-9_\-]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
-            }
-            var ext = arquivo.name.split(".").pop().toLowerCase();
-            var nomeSafe = _sanitizarPath(nome);
-            var path = "alunos/" + Date.now() + "_" + nomeSafe + "." + ext;
-            var up = await window.sbClient.storage.from("fotos").upload(path, arquivo, { upsert: true });
-            if (up.error) throw up.error;
-            var pub = window.sbClient.storage.from("fotos").getPublicUrl(path);
-            var fotoUrl = pub.data.publicUrl;
-            if (alunoId) {
-                await sbAtualizarFotoAluno(alunoId, fotoUrl);
-                /* Atualiza cache */
-                for (var k in _cacheAlunos) {
-                    if (k.endsWith("|" + nome)) { _cacheAlunos[k].foto_url = fotoUrl; break; }
-                }
-            }
-        } catch(e) {
-            ocultarLoadingSimples();
-            mostrarModalAviso("Erro", "Não foi possível salvar a foto: " + e.message);
-            return;
-        }
-        ocultarLoadingSimples();
-        fecharModalEditarAluno();
-        mostrarModalAviso("Foto salva", "A foto de \"" + nome + "\" foi atualizada com sucesso.");
-        carregar();
-    } else if (arquivo && !window.sbOnline) {
-        mostrarModalAviso("Sem conexão", "Você está offline. Conecte-se ao Supabase para salvar fotos.");
-    }
-}
-
-function eaRemoverAluno() {
-    var m = document.getElementById("modal-editar-aluno");
-    if (!m) return;
-    var nome = m.dataset.nomeAluno;
-    if (!nome) return;
-    fecharModalEditarAluno();
-    mostrarModalConfirmacao("Remover aluno", "Deseja remover permanentemente o aluno \"" + nome + "\"? Todos os lançamentos serão apagados.", async function() {
-        var turma = getTurmaAtual();
-        var nomeN = normalizarAluno(nome);
-        salvarAlunos(getAlunos().filter(function(x){ return normalizarAluno(x) !== nomeN; }));
-        periodosArr.forEach(function(p) {
-            for (var i = 0; i < 7; i++) localStorage.removeItem(chaveNota(normalizarTurma(turma), p.v, nomeN, i));
-        });
-        if (window.sbOnline) await sbDeletarAluno(nomeN, turma);
-        carregar();
-        mostrarModalAviso("Aluno removido", "\"" + nome + "\" foi removido com sucesso.");
-    });
 }

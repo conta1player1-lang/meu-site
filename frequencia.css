@@ -1,0 +1,600 @@
+/* ════════════════════════════════════════════════════════════════
+   FREQUÊNCIA DA TURMA — CSS isolado do sistema
+   Sempre tema claro, independente do modo escuro do sistema.
+════════════════════════════════════════════════════════════════ */
+
+/* ── Overlay / Modal base ── */
+#modal-frequencia {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    background: #F1F5F9;
+    overflow-y: auto;
+    font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
+    color: #1E293B;
+}
+#modal-frequencia.freq-aberto { display: block; }
+
+/* Garante tema claro SEMPRE, mesmo em dark mode */
+#modal-frequencia,
+#modal-frequencia * {
+    color-scheme: light !important;
+}
+
+/* ── Container principal ── */
+.freq-container {
+    max-width: 1600px;
+    margin: 20px auto;
+    padding: 0 16px 40px;
+}
+
+/* ── Cabeçalho azul ── */
+.freq-header {
+    background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 50%, #2563eb 100%);
+    border-radius: 16px 16px 0 0;
+    padding: 16px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    color: #fff;
+    box-shadow: 0 4px 20px rgba(30,64,175,0.25);
+}
+.freq-header-left {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+.freq-header-icon {
+    width: 48px;
+    height: 48px;
+    background: rgba(255,255,255,0.15);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    flex-shrink: 0;
+    backdrop-filter: blur(4px);
+}
+.freq-header-title {
+    font-size: 17px;
+    font-weight: 800;
+    letter-spacing: 1px;
+    line-height: 1.2;
+    text-transform: uppercase;
+}
+.freq-header-sub {
+    font-size: 12px;
+    color: rgba(255,255,255,0.7);
+    margin-top: 2px;
+    font-weight: 400;
+}
+.freq-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.freq-btn-header {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    padding: 9px 18px;
+    border-radius: 9px;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all .18s;
+    border: 1.5px solid rgba(255,255,255,0.35);
+    background: rgba(255,255,255,0.1);
+    color: #fff;
+    letter-spacing: .3px;
+}
+.freq-btn-header:hover { background: rgba(255,255,255,0.22); }
+.freq-btn-header.primary {
+    background: #fff;
+    color: #1e40af;
+    border-color: transparent;
+}
+.freq-btn-header.primary:hover { background: #eff6ff; }
+.freq-btn-fechar {
+    width: 38px;
+    height: 38px;
+    padding: 0;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+/* ── Cards informativos ── */
+.freq-info-grid {
+    display: grid;
+    grid-template-columns: 2fr 1.2fr 0.9fr 0.9fr 0.7fr;
+    background: #fff;
+    border-left: 1px solid #e2e8f0;
+    border-right: 1px solid #e2e8f0;
+    border-bottom: 1px solid #e2e8f0;
+}
+.freq-info-card {
+    padding: 14px 18px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    border-right: 1px solid #e2e8f0;
+}
+.freq-info-card:last-child { border-right: none; }
+.freq-info-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 15px;
+    flex-shrink: 0;
+}
+.freq-info-icon.escola   { background: #eff6ff; color: #1d4ed8; }
+.freq-info-icon.prof     { background: #ecfdf5; color: #059669; }
+.freq-info-icon.turma    { background: #f5f3ff; color: #7c3aed; }
+.freq-info-icon.periodo  { background: #fef2f2; color: #dc2626; }
+.freq-info-icon.dias     { background: #fefce8; color: #ca8a04; }
+.freq-info-label {
+    font-size: 10px;
+    text-transform: uppercase;
+    font-weight: 700;
+    color: #94a3b8;
+    letter-spacing: .6px;
+    margin-bottom: 3px;
+}
+.freq-info-val {
+    font-size: 13px;
+    font-weight: 700;
+    color: #1e293b;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+}
+
+/* ── Abas ── */
+.freq-tabs {
+    background: #fff;
+    border-left: 1px solid #e2e8f0;
+    border-right: 1px solid #e2e8f0;
+    border-bottom: 1px solid #e2e8f0;
+    display: flex;
+    gap: 0;
+    padding: 0 24px;
+}
+.freq-tab {
+    padding: 13px 20px;
+    font-size: 12px;
+    font-weight: 700;
+    color: #94a3b8;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: all .18s;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    letter-spacing: .3px;
+    background: none;
+    border-top: none;
+    border-left: none;
+    border-right: none;
+}
+.freq-tab:hover { color: #1e40af; }
+.freq-tab.ativa {
+    color: #1e40af;
+    border-bottom-color: #1e40af;
+}
+
+/* ── Conteúdo das abas ── */
+.freq-aba { display: none; }
+.freq-aba.ativa { display: block; }
+
+/* ── Tabela de frequência ── */
+.freq-table-wrap {
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-top: none;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    padding: 0;
+}
+.freq-table {
+    border-collapse: collapse;
+    font-size: 11.5px;
+    min-width: 100%;
+    background: #fff;
+}
+.freq-table th {
+    border: 1px solid #e2e8f0;
+    padding: 0;
+    font-weight: 700;
+    text-align: center;
+    white-space: nowrap;
+    background: #f8fafc;
+    color: #475569;
+}
+.freq-th-main {
+    background: #1e3a8a !important;
+    color: #fff !important;
+    padding: 10px 8px !important;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: .5px;
+}
+.freq-th-num {
+    width: 34px;
+    min-width: 34px;
+    max-width: 34px;
+}
+.freq-th-aluno {
+    text-align: left !important;
+    padding-left: 12px !important;
+    width: 220px;
+    min-width: 180px;
+}
+.freq-th-dia {
+    width: 28px;
+    min-width: 28px;
+    max-width: 28px;
+    padding: 5px 1px !important;
+    line-height: 1.1;
+}
+.freq-th-dia .freq-dia-num {
+    display: block;
+    font-size: 11px;
+    font-weight: 800;
+    color: inherit;
+}
+.freq-th-dia .freq-dia-mes {
+    display: block;
+    font-size: 7.5px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0;
+    margin-top: 1px;
+    opacity: .75;
+}
+
+/* Cores por mês */
+.freq-mes-jan { color: #2563eb !important; background: #eff6ff !important; }
+.freq-mes-fev { color: #059669 !important; background: #ecfdf5 !important; }
+.freq-mes-mar { color: #d97706 !important; background: #fffbeb !important; }
+.freq-mes-abr { color: #ea580c !important; background: #fff7ed !important; }
+.freq-mes-mai { color: #7c3aed !important; background: #f5f3ff !important; }
+.freq-mes-jun { color: #0284c7 !important; background: #f0f9ff !important; }
+.freq-mes-jul { color: #16a34a !important; background: #f0fdf4 !important; }
+.freq-mes-ago { color: #db2777 !important; background: #fdf2f8 !important; }
+.freq-mes-set { color: #ca8a04 !important; background: #fefce8 !important; }
+.freq-mes-out { color: #dc2626 !important; background: #fef2f2 !important; }
+.freq-mes-nov { color: #8b5cf6 !important; background: #faf5ff !important; }
+.freq-mes-dez { color: #64748b !important; background: #f8fafc !important; }
+
+/* Linhas da tabela */
+.freq-table td {
+    border: 1px solid #e2e8f0;
+    padding: 0;
+    height: 26px;
+    text-align: center;
+    color: #1e293b;
+    background: #fff;
+}
+.freq-td-num {
+    font-weight: 700;
+    color: #1e40af;
+    background: #f8fafc !important;
+    font-size: 11px;
+    width: 40px;
+}
+.freq-td-aluno {
+    text-align: left !important;
+    padding-left: 12px !important;
+    font-weight: 600;
+    color: #334155;
+    font-size: 11.5px;
+    white-space: nowrap;
+}
+.freq-td-celula {
+    width: 28px;
+    min-width: 28px;
+    max-width: 28px;
+}
+.freq-table tr:nth-child(even) td { background: #f8fafc; }
+.freq-table tr:nth-child(even) .freq-td-num { background: #f1f5f9 !important; }
+.freq-table tr:hover td { background: #eff6ff !important; }
+.freq-table tr:hover .freq-td-num { background: #dbeafe !important; }
+
+/* ── Aba Configurar Dias ── */
+.freq-config-wrap {
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-top: none;
+    padding: 28px;
+}
+.freq-config-titulo {
+    font-size: 14px;
+    font-weight: 800;
+    color: #1e293b;
+    margin-bottom: 6px;
+}
+.freq-config-sub {
+    font-size: 12px;
+    color: #64748b;
+    margin-bottom: 24px;
+}
+.freq-calendarios {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 20px;
+}
+.freq-cal-mes {
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    overflow: hidden;
+    background: #fff;
+}
+.freq-cal-mes-header {
+    padding: 10px 14px;
+    font-size: 12px;
+    font-weight: 800;
+    color: #fff;
+    text-transform: uppercase;
+    letter-spacing: .5px;
+    background: #1e40af;
+}
+.freq-cal-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    padding: 10px;
+    gap: 3px;
+}
+.freq-cal-dow {
+    font-size: 9px;
+    font-weight: 700;
+    text-align: center;
+    color: #94a3b8;
+    padding: 3px 0;
+    text-transform: uppercase;
+}
+.freq-cal-dia {
+    width: 100%;
+    aspect-ratio: 1;
+    border-radius: 6px;
+    border: none;
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all .12s;
+    background: transparent;
+    color: #334155;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.freq-cal-dia:hover:not(.fim-semana):not(.vazio) { background: #dbeafe; color: #1e40af; }
+.freq-cal-dia.fim-semana { color: #cbd5e1; cursor: default; }
+.freq-cal-dia.vazio { background: transparent; cursor: default; }
+.freq-cal-dia.selecionado {
+    background: #1e40af !important;
+    color: #fff !important;
+    font-weight: 800;
+}
+.freq-config-footer {
+    margin-top: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-top: 20px;
+    border-top: 1px solid #e2e8f0;
+}
+.freq-dias-selecionados-info {
+    font-size: 13px;
+    font-weight: 700;
+    color: #1e40af;
+}
+.freq-dias-selecionados-info span {
+    font-size: 11px;
+    color: #64748b;
+    font-weight: 400;
+    margin-left: 6px;
+}
+
+/* ── Botões gerais ── */
+.freq-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 10px 20px;
+    border-radius: 9px;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all .18s;
+    border: 1.5px solid #e2e8f0;
+    background: #fff;
+    color: #334155;
+    letter-spacing: .3px;
+}
+.freq-btn:hover { background: #f8fafc; border-color: #cbd5e1; }
+.freq-btn.primary { background: #1e40af; color: #fff; border-color: transparent; }
+.freq-btn.primary:hover { background: #1e3a8a; }
+.freq-btn.danger { background: #fef2f2; color: #dc2626; border-color: #fecaca; }
+.freq-btn.danger:hover { background: #fee2e2; }
+
+/* ── Rodapé ── */
+.freq-footer {
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-top: none;
+    border-radius: 0 0 16px 16px;
+    padding: 18px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+.freq-footer-left {
+    font-size: 11px;
+    color: #94a3b8;
+    font-weight: 500;
+}
+.freq-footer-right {
+    display: flex;
+    gap: 10px;
+}
+
+/* ── Rodapé arredondado das abas ── */
+.freq-aba.ativa:last-child .freq-config-wrap {
+    border-radius: 0;
+}
+
+/* ── Toast / feedback ── */
+.freq-toast {
+    position: fixed;
+    bottom: 28px;
+    right: 28px;
+    background: #1e40af;
+    color: #fff;
+    padding: 12px 20px;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 700;
+    box-shadow: 0 4px 20px rgba(30,64,175,0.3);
+    z-index: 10001;
+    opacity: 0;
+    transform: translateY(10px);
+    transition: all .25s;
+    pointer-events: none;
+}
+.freq-toast.visivel { opacity: 1; transform: translateY(0); }
+
+/* ══════════════════════════════════════════════════════════════
+   IMPRESSÃO — apenas a frequência, sem nada do sistema
+══════════════════════════════════════════════════════════════ */
+@media print {
+    /* Oculta tudo do sistema */
+    body > *:not(#modal-frequencia) { display: none !important; }
+
+    /* Oculta controles do modal */
+    .freq-header-actions,
+    .freq-tabs,
+    .freq-footer,
+    .freq-config-wrap,
+    .freq-toast { display: none !important; }
+
+    #modal-frequencia {
+        display: block !important;
+        position: static !important;
+        overflow: visible !important;
+        background: #fff !important;
+    }
+
+    .freq-container {
+        max-width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+
+    .freq-header {
+        border-radius: 0 !important;
+        box-shadow: none !important;
+        padding: 10px 16px !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+
+    .freq-header-title { font-size: 14px !important; }
+    .freq-header-sub   { font-size: 10px !important; }
+    .freq-header-icon  { width: 34px !important; height: 34px !important; }
+
+    .freq-info-grid,
+    .freq-table-wrap { border: none !important; }
+
+    /* Cards superiores: proporção equilibrada na impressão */
+    .freq-info-grid  { grid-template-columns: 1.4fr 1fr 0.85fr 0.85fr 0.65fr !important; }
+    .freq-info-card  { padding: 7px 10px !important; gap: 7px !important; }
+    .freq-info-icon  { width: 26px !important; height: 26px !important; font-size: 11px !important; }
+    .freq-info-label { font-size: 7.5px !important; }
+    .freq-info-val   { font-size: 10px !important; max-width: 100% !important; }
+
+    /* ── TABELA — ajustes cirúrgicos para caber todas as datas ── */
+
+    /* Nº: mais estreito */
+    .freq-th-num,
+    .freq-td-num {
+        width: 22px !important;
+        min-width: 22px !important;
+        max-width: 22px !important;
+        font-size: 10px !important;
+        padding: 0 !important;
+    }
+
+    /* Nome: menor para ganhar espaço */
+    .freq-th-aluno { width: 155px !important; min-width: 155px !important; padding-left: 8px !important; }
+    .freq-td-aluno {
+        width: 155px !important;
+        min-width: 155px !important;
+        max-width: 155px !important;
+        font-size: 10.5px !important;
+        font-weight: 700 !important;
+        padding-left: 8px !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+    }
+
+    /* Datas: máximo compacto para caber todas */
+    .freq-th-dia {
+        width: 16px !important;
+        min-width: 16px !important;
+        max-width: 16px !important;
+        padding: 2px 0 !important;
+    }
+    .freq-th-dia .freq-dia-num {
+        font-size: 7.5px !important;
+        font-weight: 800 !important;
+        line-height: 1;
+    }
+    .freq-th-dia .freq-dia-mes {
+        font-size: 5.5px !important;
+        margin-top: 1px;
+        line-height: 1;
+    }
+    .freq-td-celula {
+        width: 16px !important;
+        min-width: 16px !important;
+        max-width: 16px !important;
+        padding: 0 !important;
+    }
+
+    /* Altura das linhas: 24px */
+    .freq-table td,
+    .freq-table th { height: 24px !important; }
+
+    /* Cabeçalho azul da tabela */
+    .freq-th-main {
+        font-size: 8px !important;
+        padding: 6px 4px !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+
+    /* Cores dos meses na impressão */
+    .freq-mes-jan,.freq-mes-fev,.freq-mes-mar,.freq-mes-abr,
+    .freq-mes-mai,.freq-mes-jun,.freq-mes-jul,.freq-mes-ago,
+    .freq-mes-set,.freq-mes-out,.freq-mes-nov,.freq-mes-dez {
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+
+    /* Bordas mais finas na impressão */
+    .freq-table td,
+    .freq-table th { border-color: #d1d5db !important; }
+
+    /* Página A4 paisagem com margens mínimas */
+    @page {
+        margin: 5mm 6mm;
+        size: A4 landscape;
+    }
+}
