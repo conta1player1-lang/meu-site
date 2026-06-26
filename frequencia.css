@@ -450,6 +450,27 @@
     border-radius: 0;
 }
 
+/* ── Campos editáveis nos cards informativos ── */
+.freq-editavel {
+    cursor: text;
+    border-radius: 4px;
+    transition: background .15s, outline .15s;
+    outline: none;
+    min-width: 40px;
+}
+.freq-editavel:hover {
+    background: rgba(30,64,175,0.06);
+}
+.freq-editavel:focus {
+    background: rgba(30,64,175,0.08);
+    outline: 1.5px solid #1e40af;
+    padding: 1px 4px;
+}
+/* Oculta indicador de edição na impressão */
+@media print {
+    .freq-editavel { outline: none !important; background: transparent !important; }
+}
+
 /* ── Toast / feedback ── */
 .freq-toast {
     position: fixed;
@@ -473,57 +494,79 @@
 /* ══════════════════════════════════════════════════════════════
    IMPRESSÃO — apenas a frequência, sem nada do sistema
 ══════════════════════════════════════════════════════════════ */
+/* Print da frequência só se aplica quando o modal está aberto (body.freq-imprimindo) */
+body.freq-imprimindo * { visibility: hidden; }
+body.freq-imprimindo #modal-frequencia,
+body.freq-imprimindo #modal-frequencia * { visibility: visible; }
+body.freq-imprimindo #modal-frequencia .freq-header-actions,
+body.freq-imprimindo #modal-frequencia .freq-tabs,
+body.freq-imprimindo #modal-frequencia .freq-footer,
+body.freq-imprimindo #modal-frequencia .freq-config-wrap,
+body.freq-imprimindo #modal-frequencia .freq-toast { visibility: hidden !important; }
+
 @media print {
-    /* Oculta tudo do sistema */
-    body > *:not(#modal-frequencia) { display: none !important; }
+    /* ── Só aplica quando frequência está sendo impressa ── */
+    body.freq-imprimindo > *:not(#modal-frequencia) { display: none !important; }
 
-    /* Oculta controles do modal */
-    .freq-header-actions,
-    .freq-tabs,
-    .freq-footer,
-    .freq-config-wrap,
-    .freq-toast { display: none !important; }
-
-    #modal-frequencia {
+    body.freq-imprimindo #modal-frequencia {
         display: block !important;
         position: static !important;
         overflow: visible !important;
         background: #fff !important;
     }
 
-    .freq-container {
+    body.freq-imprimindo .freq-container {
         max-width: 100% !important;
         margin: 0 !important;
         padding: 0 !important;
     }
 
-    .freq-header {
+    /* Controles ocultos na impressão */
+    body.freq-imprimindo .freq-header-actions,
+    body.freq-imprimindo .freq-tabs,
+    body.freq-imprimindo .freq-footer,
+    body.freq-imprimindo .freq-config-wrap,
+    body.freq-imprimindo .freq-toast { display: none !important; }
+
+    /* Cabeçalho azul */
+    body.freq-imprimindo .freq-header {
         border-radius: 0 !important;
         box-shadow: none !important;
         padding: 10px 16px !important;
         -webkit-print-color-adjust: exact;
         print-color-adjust: exact;
     }
+    body.freq-imprimindo .freq-header-title { font-size: 14px !important; }
+    body.freq-imprimindo .freq-header-sub   { font-size: 10px !important; }
 
-    .freq-header-title { font-size: 14px !important; }
-    .freq-header-sub   { font-size: 10px !important; }
-    .freq-header-icon  { width: 34px !important; height: 34px !important; }
+    /* FIX 2: ícone do cabeçalho — branco sobre fundo azul */
+    body.freq-imprimindo .freq-header-icon {
+        width: 38px !important;
+        height: 38px !important;
+        background: rgba(255,255,255,0.2) !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+    body.freq-imprimindo .freq-header-icon i {
+        color: #fff !important;
+        font-size: 18px !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
 
-    .freq-info-grid,
-    .freq-table-wrap { border: none !important; }
+    body.freq-imprimindo .freq-info-grid,
+    body.freq-imprimindo .freq-table-wrap { border: none !important; }
 
-    /* Cards superiores: proporção equilibrada na impressão */
-    .freq-info-grid  { grid-template-columns: 1.4fr 1fr 0.85fr 0.85fr 0.65fr !important; }
-    .freq-info-card  { padding: 7px 10px !important; gap: 7px !important; }
-    .freq-info-icon  { width: 26px !important; height: 26px !important; font-size: 11px !important; }
-    .freq-info-label { font-size: 7.5px !important; }
-    .freq-info-val   { font-size: 10px !important; max-width: 100% !important; }
+    /* Cards superiores */
+    body.freq-imprimindo .freq-info-grid  { grid-template-columns: 1.4fr 1fr 0.85fr 0.85fr 0.65fr !important; }
+    body.freq-imprimindo .freq-info-card  { padding: 7px 10px !important; gap: 7px !important; }
+    body.freq-imprimindo .freq-info-icon  { width: 26px !important; height: 26px !important; font-size: 11px !important; }
+    body.freq-imprimindo .freq-info-label { font-size: 7.5px !important; }
+    body.freq-imprimindo .freq-info-val   { font-size: 10px !important; max-width: 100% !important; }
 
-    /* ── TABELA — ajustes cirúrgicos para caber todas as datas ── */
-
-    /* Nº: mais estreito */
-    .freq-th-num,
-    .freq-td-num {
+    /* Nº */
+    body.freq-imprimindo .freq-th-num,
+    body.freq-imprimindo .freq-td-num {
         width: 22px !important;
         min-width: 22px !important;
         max-width: 22px !important;
@@ -531,9 +574,13 @@
         padding: 0 !important;
     }
 
-    /* Nome: menor para ganhar espaço */
-    .freq-th-aluno { width: 155px !important; min-width: 155px !important; padding-left: 8px !important; }
-    .freq-td-aluno {
+    /* Nome */
+    body.freq-imprimindo .freq-th-aluno {
+        width: 155px !important;
+        min-width: 155px !important;
+        padding-left: 8px !important;
+    }
+    body.freq-imprimindo .freq-td-aluno {
         width: 155px !important;
         min-width: 155px !important;
         max-width: 155px !important;
@@ -544,58 +591,135 @@
         text-overflow: ellipsis !important;
     }
 
-    /* Datas: máximo compacto para caber todas */
-    .freq-th-dia {
+    /* Datas: coluna compacta, conteúdo maior e mais grosso */
+    body.freq-imprimindo .freq-th-dia {
         width: 16px !important;
         min-width: 16px !important;
         max-width: 16px !important;
-        padding: 2px 0 !important;
+        padding: 3px 0 !important;
     }
-    .freq-th-dia .freq-dia-num {
-        font-size: 7.5px !important;
-        font-weight: 800 !important;
-        line-height: 1;
+    body.freq-imprimindo .freq-th-dia .freq-dia-num {
+        font-size: 9px !important;      /* maior sem aumentar coluna */
+        font-weight: 900 !important;    /* mais grosso */
+        line-height: 1.1;
     }
-    .freq-th-dia .freq-dia-mes {
-        font-size: 5.5px !important;
+    body.freq-imprimindo .freq-th-dia .freq-dia-mes {
+        font-size: 6.5px !important;    /* maior sem aumentar coluna */
+        font-weight: 700 !important;    /* mais grosso */
         margin-top: 1px;
         line-height: 1;
     }
-    .freq-td-celula {
+    body.freq-imprimindo .freq-td-celula {
         width: 16px !important;
         min-width: 16px !important;
         max-width: 16px !important;
         padding: 0 !important;
     }
 
-    /* Cabeçalho das datas: +4px para respirar e mostrar números maiores */
-    .freq-table th { height: 28px !important; }
-    /* Linhas dos alunos: -1px mais compactas */
-    .freq-table td { height: 23px !important; }
+    /* Alturas das linhas */
+    body.freq-imprimindo .freq-table th { height: 28px !important; }
+    body.freq-imprimindo .freq-table td { height: 23px !important; }
 
     /* Cabeçalho azul da tabela */
-    .freq-th-main {
+    body.freq-imprimindo .freq-th-main {
         font-size: 8px !important;
         padding: 6px 4px !important;
         -webkit-print-color-adjust: exact;
         print-color-adjust: exact;
     }
 
-    /* Cores dos meses na impressão */
-    .freq-mes-jan,.freq-mes-fev,.freq-mes-mar,.freq-mes-abr,
-    .freq-mes-mai,.freq-mes-jun,.freq-mes-jul,.freq-mes-ago,
-    .freq-mes-set,.freq-mes-out,.freq-mes-nov,.freq-mes-dez {
+    /* Cores dos meses */
+    body.freq-imprimindo .freq-mes-jan, body.freq-imprimindo .freq-mes-fev,
+    body.freq-imprimindo .freq-mes-mar, body.freq-imprimindo .freq-mes-abr,
+    body.freq-imprimindo .freq-mes-mai, body.freq-imprimindo .freq-mes-jun,
+    body.freq-imprimindo .freq-mes-jul, body.freq-imprimindo .freq-mes-ago,
+    body.freq-imprimindo .freq-mes-set, body.freq-imprimindo .freq-mes-out,
+    body.freq-imprimindo .freq-mes-nov, body.freq-imprimindo .freq-mes-dez {
         -webkit-print-color-adjust: exact;
         print-color-adjust: exact;
     }
 
-    /* Bordas mais finas na impressão */
-    .freq-table td,
-    .freq-table th { border-color: #d1d5db !important; }
+    /* Bordas mais finas */
+    body.freq-imprimindo .freq-table td,
+    body.freq-imprimindo .freq-table th { border-color: #d1d5db !important; }
 
-    /* Página A4 paisagem com margens mínimas */
     @page {
         margin: 5mm 6mm;
         size: A4 landscape;
     }
+}
+
+/* ════════════════════════════════════════════════════════════════
+   RESPONSIVIDADE MOBILE — frequência
+════════════════════════════════════════════════════════════════ */
+@media (max-width: 700px) {
+    #modal-frequencia { overflow-y: auto; }
+
+    .freq-container { padding: 0 0 24px; margin: 0; }
+
+    /* Header compacto */
+    .freq-header {
+        border-radius: 0 !important;
+        padding: 12px 14px !important;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+    .freq-header-title { font-size: 14px !important; }
+    .freq-header-sub   { font-size: 10px !important; }
+    .freq-header-icon  { width: 36px !important; height: 36px !important; font-size: 16px !important; }
+
+    /* Botões do header: só ícones */
+    .freq-btn-header span { display: none; }
+    .freq-btn-header { padding: 8px 10px !important; gap: 0 !important; }
+    .freq-btn-fechar { width: 34px !important; height: 34px !important; }
+
+    /* Cards informativos: 2 colunas em vez de 5 */
+    .freq-info-grid {
+        grid-template-columns: 1fr 1fr !important;
+    }
+    .freq-info-card {
+        border-right: 1px solid #e2e8f0;
+        border-bottom: 1px solid #e2e8f0;
+        padding: 10px 12px !important;
+        gap: 8px !important;
+    }
+    /* Último card (dias letivos) ocupa linha inteira */
+    .freq-info-card:last-child {
+        grid-column: 1 / -1;
+        border-right: none;
+    }
+    .freq-info-icon { width: 32px !important; height: 32px !important; font-size: 13px !important; }
+    .freq-info-label { font-size: 9px !important; }
+    .freq-info-val   { font-size: 12px !important; }
+
+    /* Abas */
+    .freq-tabs { padding: 0 12px; }
+    .freq-tab  { padding: 10px 12px !important; font-size: 11px !important; }
+
+    /* Tabela: scroll horizontal */
+    .freq-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    .freq-td-aluno   { min-width: 140px; font-size: 11px !important; }
+
+    /* Config dias: calendários em 1 coluna */
+    .freq-config-wrap  { padding: 16px !important; }
+    .freq-calendarios  { grid-template-columns: repeat(2, 1fr) !important; gap: 12px !important; }
+    .freq-config-footer { flex-direction: column !important; gap: 12px !important; }
+    .freq-config-footer > div:last-child { width: 100%; flex-direction: column; }
+    .freq-config-footer .freq-btn { width: 100% !important; justify-content: center; }
+}
+
+@media (max-width: 400px) {
+    .freq-calendarios { grid-template-columns: 1fr !important; }
+    .freq-info-grid   { grid-template-columns: 1fr !important; }
+    .freq-info-card:last-child { grid-column: 1; }
+    .freq-info-card { border-right: none; }
+}
+
+/* Landscape mobile */
+@media (max-width: 900px) and (orientation: landscape) {
+    .freq-header { padding: 8px 14px !important; }
+    .freq-header-title { font-size: 13px !important; }
+    .freq-header-sub { display: none; }
+    .freq-info-grid { grid-template-columns: repeat(5, 1fr) !important; }
+    .freq-info-card { padding: 6px 8px !important; }
 }

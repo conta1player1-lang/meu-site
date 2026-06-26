@@ -24,18 +24,33 @@
 
 /* ── Reset ─────────────────────────────────────────────────── */
 * { box-sizing: border-box; }
-html { height: 100%; }
+html, body {
+    overflow-x: hidden !important;
+    max-width: 100% !important;
+}
+
+html {
+    height: 100%;
+}
+
+*, *::before, *::after {
+    box-sizing: border-box;
+}
 
 body {
     font-family: 'Inter', sans-serif;
     background-color: var(--bg);
     margin: 0;
+    width: 100%;
+    max-width: 100vw;
     display: flex;
     flex-direction: column;
     height: 100vh;
     min-height: 100vh;
     max-height: 100vh;
     overflow: hidden;
+    overflow-x: hidden;
+    position: relative;
 }
 
 /* ════════════════════════════════════════════════════════════════
@@ -270,16 +285,26 @@ body {
 .sidebar .toggle-sidebar {
     display: flex;
     justify-content: flex-end;
+    align-items: center;
     padding: 14px 16px 10px;
     cursor: pointer;
     color: #94a3b8;
-    font-size: 16px;
+    font-size: 18px;
     flex-shrink: 0;
-    transition: color .2s;
+    transition: color .2s, background .2s;
+    border-radius: 8px;
+    margin: 4px 8px 0;
 }
-.sidebar .toggle-sidebar:hover { color: var(--primary); }
-.sidebar.collapsed .toggle-sidebar { justify-content: center; }
+.sidebar .toggle-sidebar:hover {
+    color: var(--primary);
+    background: rgba(99,102,241,0.08);
+}
+.sidebar.collapsed .toggle-sidebar {
+    justify-content: center;
+    margin: 4px 4px 0;
+}
 
+/* Mobile: botão flutuante na borda esquerda quando sidebar fechada */
 /* ── Section labels ── */
 .sb-section-label {
     font-size: 9.5px;
@@ -643,10 +668,12 @@ td {
     color: white;
     font-weight: 800;
     font-size: 10.5px;
-    width: 110px;
+    width: 110px;       /* largura fixa igual ao maior nível (Leitor avançado) */
     display: inline-block;
     text-align: center;
     line-height: 1.2;
+    white-space: nowrap;
+    box-sizing: border-box;
 }
 .pre1      { background: #ef4444; }
 .pre2      { background: #fb923c; }
@@ -1262,3 +1289,5 @@ td {
     0%, 100% { box-shadow: 0 0 0 1px rgba(220,38,38,0.15), 0 4px 14px rgba(220,38,38,0.10); }
     50%       { box-shadow: 0 0 0 2px rgba(220,38,38,0.3),  0 6px 22px rgba(220,38,38,0.20); }
 }
+
+/* header-hamburger removido — sidebar usa toggle-sidebar interno */

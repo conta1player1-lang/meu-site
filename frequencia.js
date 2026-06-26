@@ -112,12 +112,18 @@ function salvarDatasLS() {
 function renderFrequencia() {
     var d = getDadosSistema();
 
-    /* Cards informativos */
+    /* Cards informativos — só preenche se vazio ou padrão (preserva edição do usuário) */
     var el = function(id){ return document.getElementById(id); };
-    if (el('freq-val-escola'))   el('freq-val-escola').textContent   = d.escola;
-    if (el('freq-val-prof'))     el('freq-val-prof').textContent     = d.professor;
-    if (el('freq-val-turma'))    el('freq-val-turma').textContent    = d.turma;
-    if (el('freq-val-periodo'))  el('freq-val-periodo').textContent  = d.periodoLabel;
+    function _preencherSeVazio(id, valor) {
+        var elem = el(id);
+        if (!elem) return;
+        var atual = (elem.textContent || '').trim();
+        if (atual === '' || atual === '—') elem.textContent = valor;
+    }
+    _preencherSeVazio('freq-val-escola',  d.escola);
+    _preencherSeVazio('freq-val-prof',    d.professor);
+    _preencherSeVazio('freq-val-turma',   d.turma);
+    _preencherSeVazio('freq-val-periodo', d.periodoLabel);
     atualizarInfoDias();
 
     /* Tabela */
@@ -281,9 +287,20 @@ window.freqImprimir = function() {
         freqToast('Configure os dias letivos primeiro.');
         return;
     }
-    /* Garante que a aba de frequência está ativa antes de imprimir */
     freqMudarAba('frequencia');
-    setTimeout(function() { window.print(); }, 120);
+    /* Adiciona classe que ativa o CSS de impressão da frequência */
+    document.body.classList.add('freq-imprimindo');
+    setTimeout(function() {
+        window.print();
+        /* Remove a classe após a impressão (afterprint ou fallback) */
+        var remover = function() {
+            document.body.classList.remove('freq-imprimindo');
+            window.removeEventListener('afterprint', remover);
+        };
+        window.addEventListener('afterprint', remover);
+        /* Fallback: remove após 3s caso afterprint não dispare */
+        setTimeout(remover, 3000);
+    }, 120);
 };
 
 /* ═══════════════════════════════════════════
