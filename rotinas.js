@@ -942,15 +942,15 @@ function rotImprimirModal() {
         + "<\/script>"
         + "</body></html>";
 
-    mostrarLoading("Gerando PDF...");
+    mostrarLoadingSimples("Gerando PDF...");
     var w = window.open("","_blank","width=1200,height=860,menubar=yes,toolbar=yes");
     if (!w) {
-        ocultarLoading();
+        ocultarLoadingSimples();
         mostrarModalAviso("Bloqueado","O navegador bloqueou a janela popup. Permita popups para este site e tente novamente.");
         return;
     }
     w.document.open();
     w.document.write(htmlFinal);
     w.document.close();
-    setTimeout(function(){ ocultarLoading(); }, 600);
+    setTimeout(function(){ ocultarLoadingSimples(); }, 600);
 }
