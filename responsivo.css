@@ -335,6 +335,8 @@
     .top-header .logo-text p  { display: none !important; }
     .btn-header { padding: 5px 8px !important; font-size: 11px !important; }
     .btn-header span { display: none; } /* oculta texto, mantém ícone */
+    /* Hambúrguer visível em landscape mobile */
+    .sb-ham-btn { display: flex !important; }
 
     .content-body { padding: 6px !important; }
     .modal-content,
@@ -384,6 +386,7 @@
 
 /* Landscape tablets (altura > 500px, largura até 1200px) */
 @media (orientation: landscape) and (min-height: 501px) and (max-width: 1200px) {
+    .sb-ham-btn { display: flex !important; }
 
     .sidebar {
         position: fixed !important;
