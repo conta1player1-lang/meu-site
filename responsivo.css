@@ -8,11 +8,9 @@
         max-width: 100vw !important;
     }
 
-    /* Header: padding compacto no mobile */
-    .top-header {
-        padding: 0 12px !important;
-    }
-
+    /* Header: padding compacto + hambúrguer visível no mobile */
+    .top-header { padding: 0 12px !important; }
+    .sb-ham-btn { display: flex; }   /* aparece no mobile via CSS puro */
 
     /* Toggle dentro da sidebar: fecha o drawer */
     .sidebar .toggle-sidebar {
@@ -454,7 +452,7 @@
     .app-body > aside,
     .sidebar,
     .sidebar-overlay,
-    .header-hamburger,
+    .sb-ham-btn,
     .no-print,
     #atv-print-area { display: none !important; }
 

@@ -67,8 +67,9 @@ function abrirRelatorioModal() {
         lista.push({ n: nome, s: s, nv: nv });
     });
 
+    /* Card trocado: exibe período em vez de média */
     document.getElementById("rel-media-new").innerText =
-        (alunos.length ? (somaTotal / alunos.length).toFixed(1) : "0,0").replace(".", ",");
+        selP ? selP.options[selP.selectedIndex].text : "-";
     document.getElementById("rel-nivel-new").innerText =
         Object.keys(contNiveis).reduce(function(a, b) { return contNiveis[a] > contNiveis[b] ? a : b; }) || "-";
 

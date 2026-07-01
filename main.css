@@ -1290,4 +1290,23 @@ td {
     50%       { box-shadow: 0 0 0 2px rgba(220,38,38,0.3),  0 6px 22px rgba(220,38,38,0.20); }
 }
 
-/* header-hamburger removido — sidebar usa toggle-sidebar interno */
+/* ── Hambúrguer do header (sb-ham-btn) — só mobile via CSS ──
+   Controlado 100% por media query. JS não toca no display. */
+.sb-ham-btn {
+    display: none;          /* oculto no desktop */
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    color: var(--text-dark);
+    font-size: 19px;
+    flex-shrink: 0;
+    transition: background .18s;
+    margin-right: 6px;
+}
+.sb-ham-btn:hover  { background: rgba(99,102,241,0.1); }
+.sb-ham-btn:active { background: rgba(99,102,241,0.18); }

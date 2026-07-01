@@ -364,6 +364,8 @@ function toggleSidebar() {
 }
 
 function detectarMobile() {
+    /* CSS controla visibilidade do sb-ham-btn via media query.
+       JS apenas fecha o drawer quando volta ao desktop. */
     if (!isMobileView()) fecharSidebarMobile();
 }
 

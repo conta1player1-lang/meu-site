@@ -92,6 +92,10 @@
         </div>
 
         <header class="top-header">
+            <!-- Hambúrguer: só visível em mobile via CSS puro, sem JS -->
+            <button class="sb-ham-btn" onclick="toggleSidebarMobile()" aria-label="Abrir menu">
+                <i class="fas fa-bars"></i>
+            </button>
             <div class="logo-area">
                 <i class="fas fa-graduation-cap"></i>
                 <div class="logo-text">
@@ -347,11 +351,11 @@
                             </div>
                         </div>
                         <div class="card-info-new">
-                            <div class="icon-bg" style="background:#f0fdf4; color:#22c55e;"><i class="fas fa-chart-line"></i></div>
+                            <div class="icon-bg" style="background:#fef9c3; color:#ca8a04;"><i class="fas fa-calendar-alt"></i></div>
                             <div class="content-text">
-                                <span class="label-top" style="color:#22c55e;">MÉDIA TURMA</span>
-                                <span class="main-val" id="rel-media-new">0,0</span>
-                                <span class="sub-val">Pontuação média</span>
+                                <span class="label-top" style="color:#ca8a04;">PERÍODO</span>
+                                <span class="main-val" id="rel-media-new" style="font-size:13px;">-</span>
+                                <span class="sub-val">Período selecionado</span>
                             </div>
                         </div>
                         <div class="card-info-new">
