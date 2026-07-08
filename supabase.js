@@ -1178,23 +1178,62 @@ async function sbSincronizarTudo() {
         inicializarTurmas();
     } catch(e) { console.warn("[SB] Turmas nao sincronizadas:", e.message); }
 
-    /* Lançamentos — via matriculas do ano selecionado */
+    /* OPÇÃO C — Sincronização em duas etapas:
+       1. Busca TODOS os matriculados do banco (com ou sem lançamento) → salva no localStorage
+       2. Busca lançamentos → MESCLA com a lista já salva (nunca substitui)
+       Garante que alunos sem lançamento nunca desaparecem após login. */
+    try {
+        var turmas = getTurmasStorage();
+
+        /* ── ETAPA 1: Matriculados → fonte de verdade do banco ── */
+        for (var ti = 0; ti < turmas.length; ti++) {
+            var tObj      = turmas[ti];
+            var nomeTurma = normalizarTurma((typeof tObj === "object") ? tObj.nome : tObj);
+            try {
+                var matriculados = await sbBuscarAlunos(nomeTurma);
+                if (matriculados && matriculados.length > 0) {
+                    /* Para cada período, garante que todos os matriculados estão na lista */
+                    for (var pi = 0; pi < periodosArr.length; pi++) {
+                        var periodo = normalizarPeriodo(periodosArr[pi].v);
+                        var chave   = chaveAlunos(nomeTurma, periodo);
+                        var jaLocal = JSON.parse(localStorage.getItem(chave) || "[]");
+                        var nomesMatric = matriculados.map(function(m) { return normalizarAluno(m.nome); }).filter(Boolean);
+                        /* Une matriculados + local sem duplicar */
+                        var unidos = Array.from(new Set(nomesMatric.concat(jaLocal)))
+                            .filter(Boolean)
+                            .sort(function(a, b) { return a.localeCompare(b, "pt-BR"); });
+                        localStorage.setItem(chave, JSON.stringify(unidos));
+                    }
+                }
+            } catch(eM) { console.warn("[SB] Matriculados nao carregados para", nomeTurma, eM.message); }
+        }
+        console.log("[SB] Matriculados sincronizados.");
+    } catch(e) { console.warn("[SB] Etapa matriculados falhou:", e.message); }
+
+    /* ── ETAPA 2: Lançamentos → mescla notas (nunca substitui lista de alunos) ── */
     try {
         var turmas = getTurmasStorage();
         for (var ti = 0; ti < turmas.length; ti++) {
             for (var pi = 0; pi < periodosArr.length; pi++) {
                 var tObj      = turmas[ti];
-                /* NORMALIZAÇÃO CENTRAL — evita espaços e maiúsculas inconsistentes */
                 var nomeTurma = normalizarTurma((typeof tObj === "object") ? tObj.nome : tObj);
                 var periodo   = normalizarPeriodo(periodosArr[pi].v);
                 try {
                     var lancs = await sbBuscarLancamentos(nomeTurma, periodo);
                     if (lancs && lancs.length > 0) {
-                        /* Sync com dados reais: reconstrói lista de alunos e notas */
-                        var nomes = lancs.map(function(l) { return normalizarAluno(l.aluno_nome); })
+                        /* Nomes dos alunos com lançamento */
+                        var nomesLanc = lancs.map(function(l) { return normalizarAluno(l.aluno_nome); })
+                            .filter(Boolean);
+
+                        /* MESCLA: adiciona à lista já existente (que veio da Etapa 1) */
+                        var chave    = chaveAlunos(nomeTurma, periodo);
+                        var jaLocal  = JSON.parse(localStorage.getItem(chave) || "[]");
+                        var mesclado = Array.from(new Set(jaLocal.concat(nomesLanc)))
                             .filter(Boolean)
                             .sort(function(a, b) { return a.localeCompare(b, "pt-BR"); });
-                        localStorage.setItem(chaveAlunos(nomeTurma, periodo), JSON.stringify(nomes));
+                        localStorage.setItem(chave, JSON.stringify(mesclado));
+
+                        /* Salva as notas de cada lançamento */
                         lancs.forEach(function(l) {
                             var nomeAluno = normalizarAluno(l.aluno_nome);
                             if (!nomeAluno) return;
@@ -1206,14 +1245,11 @@ async function sbSincronizarTudo() {
                             }
                         });
                     }
-                    /* CORREÇÃO: quando lancs = [] NÃO sobrescrever o localStorage com [].
-                       Um aluno recém-cadastrado sem notas ainda tem matrícula no banco mas
-                       zero lançamentos. Apagar a lista local causava o aluno desaparecer
-                       após reload. Se não vieram dados do banco, preservar o que está local. */
-                } catch(e2) { console.warn("[SB] Erro periodo", periodo, nomeTurma, e2.message); }
+                    /* Se lancs = []: lista de matriculados da Etapa 1 já está salva — não toca */
+                } catch(e2) { console.warn("[SB] Erro lancamentos", periodo, nomeTurma, e2.message); }
             }
         }
-        console.log("[SB] Lancamentos sincronizados (via matriculas).");
+        console.log("[SB] Lancamentos sincronizados.");
     } catch(e) { console.warn("[SB] Lancamentos nao sincronizados:", e.message); }
  
     /* Ano Letivo ativo */

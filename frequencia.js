@@ -19,10 +19,11 @@ var DIAS_SEM    = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
 
 /* ── Estado interno ── */
 var freq = {
-    abaAtiva:      'frequencia',
+    abaAtiva:        'frequencia',
     datasLetivasSet: new Set(), /* strings "YYYY-MM-DD" */
-    anoAtual:      new Date().getFullYear(),
-    mesConfigAtual: new Date().getMonth()
+    colunasExtras:   0,         /* colunas limpas sem data */
+    anoAtual:        new Date().getFullYear(),
+    mesConfigAtual:  new Date().getMonth()
 };
 
 /* ═══════════════════════════════════════════
@@ -32,6 +33,7 @@ function abrirFrequencia() {
     var modal = document.getElementById('modal-frequencia');
     if (!modal) return;
     freq.datasLetivasSet = carregarDatasLS();
+    freq.colunasExtras   = carregarColunasExtrasLS();
     modal.classList.add('freq-aberto');
     document.body.style.overflow = 'hidden';
     renderFrequencia();
@@ -103,7 +105,14 @@ function carregarDatasLS() {
 function salvarDatasLS() {
     try {
         localStorage.setItem(getChaveLS(), JSON.stringify(Array.from(freq.datasLetivasSet)));
+        localStorage.setItem(getChaveLS() + '_extras', String(freq.colunasExtras));
     } catch(e) {}
+}
+
+function carregarColunasExtrasLS() {
+    try {
+        return parseInt(localStorage.getItem(getChaveLS() + '_extras') || '0') || 0;
+    } catch(e) { return 0; }
 }
 
 /* ═══════════════════════════════════════════
@@ -150,6 +159,10 @@ function renderFrequencia() {
              +  '<span class="freq-dia-mes">' + MESES_ABREV[mes] + '</span>'
              +  '</th>';
     });
+    /* Colunas extras limpas */
+    for (var e = 0; e < freq.colunasExtras; e++) {
+        html += '<th class="freq-th-dia" style="background:#f8fafc;"></th>';
+    }
     html += '</tr></thead>';
 
     /* ── corpo ── */
@@ -164,6 +177,10 @@ function renderFrequencia() {
             datas.forEach(function() {
                 html += '<td class="freq-td-celula"></td>';
             });
+            /* Células das colunas extras */
+            for (var ex = 0; ex < freq.colunasExtras; ex++) {
+                html += '<td class="freq-td-celula" style="background:#fafafa;"></td>';
+            }
             html += '</tr>';
         });
     }
@@ -271,12 +288,28 @@ window.freqMudarAba = function(aba) {
    LIMPAR DATAS
 ═══════════════════════════════════════════ */
 window.freqLimparDatas = function() {
-    if (!confirm('Remover todos os dias letivos selecionados?')) return;
+    if (!confirm('Remover todos os dias letivos e colunas extras?')) return;
     freq.datasLetivasSet.clear();
+    freq.colunasExtras = 0;
     salvarDatasLS();
     renderConfigDias();
     renderFrequencia();
     freqToast('Dias letivos removidos.');
+};
+
+window.freqAdicionarColunaExtra = function() {
+    freq.colunasExtras++;
+    salvarDatasLS();
+    renderFrequencia();
+    freqToast('Coluna extra adicionada.');
+};
+
+window.freqRemoverColunaExtra = function() {
+    if (freq.colunasExtras <= 0) return;
+    freq.colunasExtras--;
+    salvarDatasLS();
+    renderFrequencia();
+    freqToast('Coluna extra removida.');
 };
 
 /* ═══════════════════════════════════════════

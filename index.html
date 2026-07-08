@@ -1847,7 +1847,13 @@
                             <i class="fas fa-check-circle" style="color:#10b981;margin-right:6px;"></i>
                             <span id="freq-total-dias">0 dias letivos selecionados</span>
                         </div>
-                        <div style="display:flex;gap:10px;">
+                        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+                            <button class="freq-btn" onclick="freqAdicionarColunaExtra()" title="Adiciona coluna em branco sem data">
+                                <i class="fas fa-plus"></i> Coluna extra
+                            </button>
+                            <button class="freq-btn" onclick="freqRemoverColunaExtra()" title="Remove última coluna extra" style="padding:10px 12px;">
+                                <i class="fas fa-minus"></i>
+                            </button>
                             <button class="freq-btn danger" onclick="freqLimparDatas()">
                                 <i class="fas fa-trash"></i> Limpar tudo
                             </button>

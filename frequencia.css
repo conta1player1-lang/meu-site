@@ -666,16 +666,19 @@ body.freq-imprimindo #modal-frequencia .freq-toast { visibility: hidden !importa
         print-color-adjust: exact;
     }
 
-    /* Cores dos meses */
-    body.freq-imprimindo .freq-mes-jan, body.freq-imprimindo .freq-mes-fev,
-    body.freq-imprimindo .freq-mes-mar, body.freq-imprimindo .freq-mes-abr,
-    body.freq-imprimindo .freq-mes-mai, body.freq-imprimindo .freq-mes-jun,
-    body.freq-imprimindo .freq-mes-jul, body.freq-imprimindo .freq-mes-ago,
-    body.freq-imprimindo .freq-mes-set, body.freq-imprimindo .freq-mes-out,
-    body.freq-imprimindo .freq-mes-nov, body.freq-imprimindo .freq-mes-dez {
-        -webkit-print-color-adjust: exact;
-        print-color-adjust: exact;
-    }
+    /* Cores dos meses na impressão — forçadas com print-color-adjust */
+    body.freq-imprimindo .freq-mes-jan { color: #2563eb !important; background: #eff6ff !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    body.freq-imprimindo .freq-mes-fev { color: #059669 !important; background: #ecfdf5 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    body.freq-imprimindo .freq-mes-mar { color: #d97706 !important; background: #fffbeb !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    body.freq-imprimindo .freq-mes-abr { color: #ea580c !important; background: #fff7ed !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    body.freq-imprimindo .freq-mes-mai { color: #7c3aed !important; background: #f5f3ff !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    body.freq-imprimindo .freq-mes-jun { color: #0284c7 !important; background: #f0f9ff !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    body.freq-imprimindo .freq-mes-jul { color: #16a34a !important; background: #f0fdf4 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    body.freq-imprimindo .freq-mes-ago { color: #db2777 !important; background: #fdf2f8 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    body.freq-imprimindo .freq-mes-set { color: #ca8a04 !important; background: #fefce8 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    body.freq-imprimindo .freq-mes-out { color: #dc2626 !important; background: #fef2f2 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    body.freq-imprimindo .freq-mes-nov { color: #8b5cf6 !important; background: #faf5ff !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    body.freq-imprimindo .freq-mes-dez { color: #64748b !important; background: #f8fafc !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 
     /* Bordas mais finas */
     body.freq-imprimindo .freq-table td,
