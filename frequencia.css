@@ -532,8 +532,9 @@ body.freq-imprimindo #modal-frequencia .freq-toast { visibility: hidden !importa
     body.freq-imprimindo #modal-frequencia * {
         color-scheme: light !important;
     }
+    /* Força branco nos td e th genéricos — EXCETO os cabeçalhos de mês (que têm cor própria) */
     body.freq-imprimindo .freq-table td,
-    body.freq-imprimindo .freq-table th,
+    body.freq-imprimindo .freq-table th:not([class*="freq-mes-"]),
     body.freq-imprimindo .freq-info-card,
     body.freq-imprimindo .freq-info-grid,
     body.freq-imprimindo .freq-table-wrap {
