@@ -600,8 +600,8 @@ body.freq-imprimindo #modal-frequencia .freq-toast { visibility: hidden !importa
     body.freq-imprimindo .freq-info-grid  { grid-template-columns: 1.4fr 1fr 0.85fr 0.85fr 0.65fr !important; }
     body.freq-imprimindo .freq-info-card  { padding: 7px 10px !important; gap: 7px !important; }
     body.freq-imprimindo .freq-info-icon  { width: 26px !important; height: 26px !important; font-size: 11px !important; }
-    body.freq-imprimindo .freq-info-label { font-size: 7.5px !important; }
-    body.freq-imprimindo .freq-info-val   { font-size: 10px !important; max-width: 100% !important; }
+    body.freq-imprimindo .freq-info-label { font-size: 9px !important; }
+    body.freq-imprimindo .freq-info-val   { font-size: 12px !important; max-width: 100% !important; }
 
     /* Nº */
     body.freq-imprimindo .freq-th-num,
@@ -638,13 +638,13 @@ body.freq-imprimindo #modal-frequencia .freq-toast { visibility: hidden !importa
         padding: 3px 0 !important;
     }
     body.freq-imprimindo .freq-th-dia .freq-dia-num {
-        font-size: 9px !important;      /* maior sem aumentar coluna */
-        font-weight: 900 !important;    /* mais grosso */
+        font-size: 10.5px !important;
+        font-weight: 900 !important;
         line-height: 1.1;
     }
     body.freq-imprimindo .freq-th-dia .freq-dia-mes {
-        font-size: 6.5px !important;    /* maior sem aumentar coluna */
-        font-weight: 700 !important;    /* mais grosso */
+        font-size: 7.5px !important;
+        font-weight: 700 !important;
         margin-top: 1px;
         line-height: 1;
     }
@@ -683,7 +683,7 @@ body.freq-imprimindo #modal-frequencia .freq-toast { visibility: hidden !importa
 
     /* Bordas mais finas */
     body.freq-imprimindo .freq-table td,
-    body.freq-imprimindo .freq-table th { border-color: #d1d5db !important; }
+    body.freq-imprimindo .freq-table th { border-color: #94a3b8 !important; }
 
     @page {
         margin: 5mm 6mm;
