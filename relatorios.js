@@ -1595,3 +1595,141 @@ function fecharModalAddAlunoFoto() {
     if (fi) fi.value = "";
 
 }
+/* ════════════════════════════════════════════════════════════════
+   MODAL EDITAR ALUNO — foto + remover
+   Funções chamadas pelo modal-editar-aluno no index.html
+════════════════════════════════════════════════════════════════ */
+
+function eaPreviewFoto(input) {
+    var file = input.files[0];
+    if (!file) return;
+    if (file.size > 2 * 1024 * 1024) {
+        mostrarModalAviso("Arquivo muito grande", "A foto deve ter no máximo 2 MB.");
+        input.value = "";
+        return;
+    }
+    var ext = file.name.split(".").pop().toLowerCase();
+    if (!["jpg","jpeg","png","webp"].includes(ext)) {
+        mostrarModalAviso("Formato inválido", "Aceitos: JPG, JPEG, PNG, WEBP.");
+        input.value = "";
+        return;
+    }
+    window._eaFotoArquivo = file;
+    var reader = new FileReader();
+    reader.onload = function(e) {
+        var prev = document.getElementById("ea-foto-preview");
+        if (prev) prev.innerHTML = "<img src='" + e.target.result + "' style='width:100%;height:100%;object-fit:cover;border-radius:50%;'>";
+    };
+    reader.readAsDataURL(file);
+}
+
+function eaRemoverFoto() {
+    window._eaFotoArquivo = null;
+    var fi = document.getElementById("ea-foto-input");
+    if (fi) fi.value = "";
+    var prev = document.getElementById("ea-foto-preview");
+    if (prev) prev.innerHTML = "<i class='fas fa-user'></i>";
+    var m = document.getElementById("modal-editar-aluno");
+    if (m) m.dataset.removerFoto = "1";
+}
+
+async function eaSalvarFoto() {
+    var m = document.getElementById("modal-editar-aluno");
+    if (!m) return;
+    var nome = m.dataset.nomeAluno;
+    if (!nome) return;
+
+    /* Busca alunoId no cache */
+    var alunoId = null;
+    for (var k in _cacheAlunos) {
+        if (k.endsWith("|" + nome)) { alunoId = _cacheAlunos[k].id; break; }
+    }
+    if (!alunoId && window.sbClient && window.sbOnline) {
+        try {
+            var ra = await window.sbClient.from("alunos").select("id").eq("nome", nome).maybeSingle();
+            if (ra.data) alunoId = ra.data.id;
+        } catch(e) {}
+    }
+
+    var arquivo     = window._eaFotoArquivo;
+    var removerFoto = m.dataset.removerFoto === "1";
+
+    if (!arquivo && !removerFoto) {
+        mostrarModalAviso("Sem alterações", "Nenhuma foto foi selecionada.");
+        return;
+    }
+
+    if (removerFoto && alunoId && window.sbClient && window.sbOnline) {
+        mostrarLoadingSimples("Removendo foto...");
+        try {
+            await sbAtualizarFotoAluno(alunoId, null);
+            for (var k in _cacheAlunos) {
+                if (k.endsWith("|" + nome)) { _cacheAlunos[k].foto_url = null; break; }
+            }
+            delete m.dataset.removerFoto;
+        } catch(e) { console.warn("[eaSalvarFoto] remover:", e); }
+        finally { ocultarLoadingSimples(); }
+        fecharModalEditarAluno();
+        mostrarModalAviso("Foto removida", "A foto do aluno foi removida.");
+        carregar();
+        return;
+    }
+
+    if (arquivo && window.sbClient && window.sbOnline) {
+        mostrarLoadingSimples("Enviando foto...");
+        try {
+            function _sanitizar(s) {
+                var map = {'á':'a','à':'a','â':'a','ã':'a','é':'e','ê':'e','í':'i','ó':'o','ô':'o','õ':'o','ú':'u','ç':'c','Á':'A','É':'E','Í':'I','Ó':'O','Ú':'U','Ç':'C'};
+                return s.split('').map(function(c){ return map[c]||c; }).join('').replace(/[^a-zA-Z0-9_\-]/g,'-').replace(/-+/g,'-').replace(/^-|-$/g,'');
+            }
+            var ext2    = arquivo.name.split(".").pop().toLowerCase();
+            var path    = "alunos/" + Date.now() + "_" + _sanitizar(nome) + "." + ext2;
+            var up      = await window.sbClient.storage.from("fotos").upload(path, arquivo, { upsert: true });
+            if (up.error) throw up.error;
+            var fotoUrl = window.sbClient.storage.from("fotos").getPublicUrl(path).data.publicUrl;
+            if (alunoId) {
+                await sbAtualizarFotoAluno(alunoId, fotoUrl);
+                for (var k in _cacheAlunos) {
+                    if (k.endsWith("|" + nome)) { _cacheAlunos[k].foto_url = fotoUrl; break; }
+                }
+            }
+            ocultarLoadingSimples();
+            fecharModalEditarAluno();
+            mostrarModalAviso("Foto salva", "A foto de \"" + nome + "\" foi atualizada.");
+            carregar();
+        } catch(e) {
+            ocultarLoadingSimples();
+            mostrarModalAviso("Erro", "Não foi possível salvar a foto: " + e.message);
+        }
+    } else if (arquivo && !window.sbOnline) {
+        mostrarModalAviso("Sem conexão", "Conecte-se ao Supabase para salvar fotos.");
+    }
+}
+
+function eaRemoverAluno() {
+    var m = document.getElementById("modal-editar-aluno");
+    if (!m) return;
+    var nome = m.dataset.nomeAluno;
+    if (!nome) return;
+    fecharModalEditarAluno();
+    mostrarModalConfirmacao(
+        "Remover aluno",
+        "Deseja remover permanentemente \"" + nome + "\"? Todos os lançamentos serão apagados.",
+        async function() {
+            var turma  = getTurmaAtual();
+            var nomeN  = normalizarAluno(nome);
+            /* Remove do localStorage em todos os períodos */
+            periodosArr.forEach(function(p) {
+                var lista = getAlunos(p.v).filter(function(x) { return normalizarAluno(x) !== nomeN; });
+                salvarAlunos(lista, p.v, turma);
+                for (var i = 0; i < 7; i++) {
+                    localStorage.removeItem(chaveNota(normalizarTurma(turma), normalizarPeriodo(p.v), nomeN, i));
+                }
+            });
+            /* Remove do banco */
+            if (window.sbOnline) await sbDeletarAluno(nomeN, turma);
+            carregar();
+            mostrarModalAviso("Aluno removido", "\"" + nome + "\" foi removido com sucesso.");
+        }
+    );
+}
