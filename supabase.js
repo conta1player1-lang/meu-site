@@ -589,7 +589,10 @@ async function sbDeletarAluno(nomeAluno, nomeTurma) {
         if (!mRest.data || mRest.data.length === 0) {
             await window.sbClient.from("alunos").delete().eq("id", alunoId);
         }
+        /* Limpa TODAS as variações de cache deste aluno para evitar IDs fantasma */
+        var anoId2 = alGetAnoSelecionadoId();
         delete _cacheAlunos[turmaId + "|" + nomeAluno];
+        delete _cacheAlunos["mat|" + turmaId + "|" + (anoId2 || "") + "|" + nomeAluno];
         return true;
     } catch(e) { console.error("[sbDeletarAluno]", e.message); return false; }
 }
@@ -732,14 +735,42 @@ async function sbSalvarNota(nomeAluno, nomeTurma, periodo, habIdx, valor) {
     try {
         var turmaId = await sbResolverTurmaId(nomeTurma);
         if (!turmaId) return false;
+
         var matriculaId = await sbResolverMatriculaId(nomeAluno, turmaId);
         if (!matriculaId) {
             console.warn("[sbSalvarNota] Matrícula não encontrada para", nomeAluno, nomeTurma);
             return false;
         }
-        /* Obtém aluno_id via matrícula já resolvida — evita busca por nome (risco de homônimos) */
-        var _matRow = await window.sbClient.from("matriculas").select("aluno_id").eq("id", matriculaId).single();
+
+        /* FIX: maybeSingle() em vez de single() — evita 406 quando ID é fantasma */
+        var _matRow = await window.sbClient.from("matriculas")
+            .select("aluno_id").eq("id", matriculaId).maybeSingle();
         var alunoId = (_matRow.data && _matRow.data.aluno_id) || null;
+
+        /* FIX: cache fantasma — matriculaId não existe mais no banco */
+        if (!alunoId) {
+            console.warn("[sbSalvarNota] Cache fantasma detectado para", nomeAluno, "— invalidando...");
+            var anoId = alGetAnoSelecionadoId();
+            /* Limpa todas as variações de chave de cache deste aluno */
+            var chave1 = "mat|" + turmaId + "|" + (anoId || "") + "|" + nomeAluno;
+            var chave2 = turmaId + "|" + nomeAluno;
+            delete _cacheAlunos[chave1];
+            delete _cacheAlunos[chave2];
+            /* Segunda tentativa com cache limpo */
+            matriculaId = await sbResolverMatriculaId(nomeAluno, turmaId);
+            if (!matriculaId) {
+                console.warn("[sbSalvarNota] Matrícula não encontrada após reinvalidação:", nomeAluno);
+                return false;
+            }
+            var _matRow2 = await window.sbClient.from("matriculas")
+                .select("aluno_id").eq("id", matriculaId).maybeSingle();
+            alunoId = (_matRow2.data && _matRow2.data.aluno_id) || null;
+            if (!alunoId) {
+                console.warn("[sbSalvarNota] alunoId ainda null após retentativa:", nomeAluno);
+                return false;
+            }
+        }
+
         var payload = {
             matricula_id:  matriculaId,
             aluno_id:      alunoId,
