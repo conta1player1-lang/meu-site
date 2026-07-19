@@ -1215,9 +1215,12 @@ async function sbSincronizarTudo() {
        Etapa 2: lançamentos → mescla notas sem substituir lista
     */
 
-    /* ── ETAPA 1: Matriculados → completa lista APENAS em períodos que já existem localmente ── */
+    /* ── ETAPA 1: Matriculados → garante que alunos aparecem mesmo sem lançamento ──
+       Escreve APENAS no período atual selecionado para não vazar entre períodos.
+       Se o localStorage estiver vazio (outro dispositivo), cria a lista com os do banco. */
     try {
         var turmas = getTurmasStorage();
+        var periodoAtual = normalizarPeriodo(typeof getPeriodo === "function" ? getPeriodo() : (periodosArr[0] ? periodosArr[0].v : "DIAG"));
         for (var ti = 0; ti < turmas.length; ti++) {
             var tObj      = turmas[ti];
             var nomeTurma = normalizarTurma((typeof tObj === "object") ? tObj.nome : tObj);
@@ -1225,18 +1228,13 @@ async function sbSincronizarTudo() {
                 var matriculados = await sbBuscarAlunos(nomeTurma);
                 if (matriculados && matriculados.length > 0) {
                     var nomesMatric = matriculados.map(function(m) { return normalizarAluno(m.nome); }).filter(Boolean);
-                    /* Só atualiza períodos que JÁ têm alunos salvos localmente */
-                    for (var pi = 0; pi < periodosArr.length; pi++) {
-                        var periodo = normalizarPeriodo(periodosArr[pi].v);
-                        var chave   = chaveAlunos(nomeTurma, periodo);
-                        var jaLocal = JSON.parse(localStorage.getItem(chave) || "[]");
-                        /* REGRA: só mescla se já havia alunos neste período */
-                        if (jaLocal.length === 0) continue;
-                        var unidos = Array.from(new Set(nomesMatric.concat(jaLocal)))
-                            .filter(Boolean)
-                            .sort(function(a, b) { return a.localeCompare(b, "pt-BR"); });
-                        localStorage.setItem(chave, JSON.stringify(unidos));
-                    }
+                    /* Escreve APENAS no período atual — sem vazar para outros períodos */
+                    var chave   = chaveAlunos(nomeTurma, periodoAtual);
+                    var jaLocal = JSON.parse(localStorage.getItem(chave) || "[]");
+                    var unidos  = Array.from(new Set(nomesMatric.concat(jaLocal)))
+                        .filter(Boolean)
+                        .sort(function(a, b) { return a.localeCompare(b, "pt-BR"); });
+                    localStorage.setItem(chave, JSON.stringify(unidos));
                 }
             } catch(eM) { console.warn("[SB] Matriculados nao carregados para", nomeTurma, eM.message); }
         }

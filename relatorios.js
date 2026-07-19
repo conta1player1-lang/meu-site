@@ -641,15 +641,22 @@ function renderizarGraficosComparativos(turmas, periodo) {
     }).sort(function(a,b) { return b.diff - a.diff; });
     if (evols.length > 0) {
         document.getElementById("kpi-maior-evolucao-turma").innerText = evols[0].turma;
-        var _ePts  = evols[0].totalPts;
-        var _eMed  = evols[0].mediaPerAluno;
-        var _eSign = _ePts >= 0 ? "+" : "";
-        var _mSign = _eMed >= 0 ? "+" : "";
-        document.getElementById("kpi-maior-evolucao-valor").innerHTML =
-            "<span style=\"font-size:20px;font-weight:800;color:" + (_ePts >= 0 ? "var(--cor-sucesso)" : "var(--cor-perigo)") + ";\">"
-            + _eSign + _ePts + " pts</span>"
-            + "<span style=\"font-size:11px;color:var(--texto-secundario);font-weight:600;font-style:normal;display:block;margin-top:3px;\">"
-            + _mSign + _eMed + " média/aluno</span>";
+        /* Sem período anterior (DIAG): não há evolução a mostrar */
+        if (!evols[0].perBase) {
+            document.getElementById("kpi-maior-evolucao-valor").innerHTML =
+                "<span style=\"font-size:20px;font-weight:800;color:var(--texto-secundario);\">—</span>"
+                + "<span style=\"font-size:11px;color:var(--texto-secundario);font-weight:600;display:block;margin-top:3px;\">Período inicial</span>";
+        } else {
+            var _ePts  = evols[0].totalPts;
+            var _eMed  = evols[0].mediaPerAluno;
+            var _eSign = _ePts >= 0 ? "+" : "";
+            var _mSign = _eMed >= 0 ? "+" : "";
+            document.getElementById("kpi-maior-evolucao-valor").innerHTML =
+                "<span style=\"font-size:20px;font-weight:800;color:" + (_ePts >= 0 ? "var(--cor-sucesso)" : "var(--cor-perigo)") + ";\">"
+                + _eSign + _ePts + " pts</span>"
+                + "<span style=\"font-size:11px;color:var(--texto-secundario);font-weight:600;font-style:normal;display:block;margin-top:3px;\">"
+                + _mSign + _eMed + " média/aluno</span>";
+        }
     }
     var mP = -1, mT = "-", mV = "-";
     turmas.forEach(function(t) {
@@ -715,12 +722,13 @@ function renderizarGraficosComparativos(turmas, periodo) {
             var v = _pctHabilidade(turma, perFinal, hi);
             return v !== null ? v : 0;
         });
-        /* Evolução por habilidade: pct_final - pct_período_base */
-        var evolucoes = labsHab.map(function(_, hi) {
-            var vBase  = perBase ? (_pctHabilidade(turma, perBase,  hi) || 0) : 0;
+        /* Evolução por habilidade: pct_final - pct_período_base
+           Se não há período base (DIAG): evolução = 0 para todas as habilidades */
+        var evolucoes = perBase ? labsHab.map(function(_, hi) {
+            var vBase  = _pctHabilidade(turma, perBase,  hi) || 0;
             var vFinal = _pctHabilidade(turma, perFinal, hi) || 0;
             return vFinal - vBase;
-        });
+        }) : labsHab.map(function() { return 0; });
 
         var cor = cores[idx % cores.length];
         return {
