@@ -1,5 +1,5 @@
 /* Service Worker — A.V. Leitura em Foco v3 */
-const CACHE = 'av-leitura-v33';
+const CACHE = 'av-leitura-v34';
 const ASSETS = [
     '/index.html',
     '/main.css', '/componentes.css', '/temas.css',

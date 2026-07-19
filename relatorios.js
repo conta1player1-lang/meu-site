@@ -347,6 +347,23 @@ function _somaAluno(turma, periodo, nome) {
     return calcularSomaAluno(turma, periodos[periodos.length - 1].v, nome);
 }
 
+/* Retorna o período base para calcular evolução:
+   - "TODOS" → "DIAG" (compara início com fim)
+   - período específico → período imediatamente anterior com dados
+   - "DIAG" ou sem anterior → null (sem evolução possível) */
+function _getPeriodoBase(turma, periodo) {
+    if (periodo === "TODOS") return "DIAG";
+    var idx = periodosArr.findIndex(function(p) { return p.v === periodo; });
+    if (idx <= 0) return null; /* DIAG ou não encontrado */
+    /* Busca o período anterior mais próximo que tenha dados */
+    for (var i = idx - 1; i >= 0; i--) {
+        var p = periodosArr[i].v;
+        var als = JSON.parse(localStorage.getItem(chaveAlunos(turma, p))) || [];
+        if (als.length > 0) return p;
+    }
+    return null;
+}
+
 function obterTodasTurmasComDados() {
     /* Usa getTurmasVisiveis: turmas ocultas são filtradas para roles não autorizados */
     var storage = getTurmasVisiveis();
@@ -608,18 +625,19 @@ function renderizarGraficosComparativos(turmas, periodo) {
         document.getElementById("kpi-melhor-media-valor").innerText = mds[0].media.toFixed(1);
     }
     var evols = turmas.map(function(t) {
-        /* Calcula evolução total e média por aluno */
-        var als = _alunosTurma(t, periodo);
-        var totalPts = 0;
+        /* Calcula evolução: compara com período anterior (não sempre DIAG) */
+        var als       = _alunosTurma(t, periodo);
+        var perBase   = _getPeriodoBase(t, periodo); /* período de referência */
+        var totalPts  = 0;
         als.forEach(function(n) {
-            var somaDiag  = calcularSomaAluno(t, "DIAG", n);
+            var somaBase  = perBase ? calcularSomaAluno(t, perBase, n) : 0;
             var somaFinal = _somaAluno(t, periodo, n);
-            totalPts += somaFinal - somaDiag;
+            totalPts += somaFinal - somaBase;
         });
         var mediaPerAluno = als.length > 0 ? parseFloat((totalPts / als.length).toFixed(1)) : 0;
-        /* diff continua sendo a diferença de médias (para o sort funcionar igual) */
-        var diff = _mediaTurma(t, periodo) - calcularMediaTurmaPeriodoComparar(t, "DIAG");
-        return { turma: t, diff: diff, totalPts: totalPts, mediaPerAluno: mediaPerAluno };
+        var mediaBase  = perBase ? calcularMediaTurmaPeriodoComparar(t, perBase) : 0;
+        var diff = _mediaTurma(t, periodo) - mediaBase;
+        return { turma: t, diff: diff, totalPts: totalPts, mediaPerAluno: mediaPerAluno, perBase: perBase };
     }).sort(function(a,b) { return b.diff - a.diff; });
     if (evols.length > 0) {
         document.getElementById("kpi-maior-evolucao-turma").innerText = evols[0].turma;
@@ -690,15 +708,18 @@ function renderizarGraficosComparativos(turmas, periodo) {
         var perFinal = todosPeriodos ? _getUltimoPeriodoValido(turma) : periodo;
         var perDiag  = "DIAG";
 
+        /* Período base para evolução: anterior ao selecionado (ou DIAG se TODOS) */
+        var perBase = _getPeriodoBase(turma, periodo);
+
         var pcts = labsHab.map(function(_, hi) {
             var v = _pctHabilidade(turma, perFinal, hi);
             return v !== null ? v : 0;
         });
-        /* Evolução por habilidade: pct_final - pct_diag */
+        /* Evolução por habilidade: pct_final - pct_período_base */
         var evolucoes = labsHab.map(function(_, hi) {
-            var vDiag  = _pctHabilidade(turma, perDiag,  hi) || 0;
+            var vBase  = perBase ? (_pctHabilidade(turma, perBase,  hi) || 0) : 0;
             var vFinal = _pctHabilidade(turma, perFinal, hi) || 0;
-            return vFinal - vDiag;
+            return vFinal - vBase;
         });
 
         var cor = cores[idx % cores.length];
