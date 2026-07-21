@@ -986,18 +986,38 @@ function caRenderizarKPIs() {
        Precisa de pelo menos 2 períodos lançados para haver estagnação.
        Percorre do penúltimo período para trás contando enquanto a soma == somaUlt. */
     function contarPersSemEvo(turma, nome, somaUlt) {
-        /* Coleta apenas os períodos que têm lançamento real */
+        /* Coleta períodos com lançamento real (soma > 0) */
         var comDado = persSemDiag.filter(function(p){
             return calcularSomaAluno(turma, p.v, nome) > 0;
         });
-        /* Precisa de pelo menos 2 períodos lançados para afirmar estagnação */
-        if (comDado.length < 2) return 0;
-        /* Conta a partir do penúltimo período (o último é somaUlt) */
+
+        /* Com apenas 1 período lançado: compara com DIAG
+           Se igual ao DIAG → 1 período sem evolução */
+        if (comDado.length === 1) {
+            var somaDiagLocal = calcularSomaAluno(turma, "DIAG", nome);
+            return (somaDiagLocal > 0 && somaUlt === somaDiagLocal) ? 1 : 0;
+        }
+
+        /* Com 0 períodos: sem dado suficiente */
+        if (comDado.length < 1) return 0;
+
+        /* Com 2+ períodos: conta pares consecutivos de trás para frente
+           onde o aluno não cresceu em relação ao período anterior */
         var count = 0;
         for (var i = comDado.length - 2; i >= 0; i--) {
-            var s = calcularSomaAluno(turma, comDado[i].v, nome);
-            if (s === somaUlt) { count++; }
-            else { break; } /* quando encontra valor diferente, para */
+            var sAtual   = calcularSomaAluno(turma, comDado[i].v,   nome);
+            var sProximo = calcularSomaAluno(turma, comDado[i+1].v, nome);
+            if (sAtual >= sProximo) {
+                count++;
+            } else {
+                break;
+            }
+        }
+        /* Verifica também se o período mais antigo com dado não evoluiu em relação ao DIAG */
+        if (comDado.length >= 1) {
+            var sPrimeiro = calcularSomaAluno(turma, comDado[0].v, nome);
+            var sDiag     = calcularSomaAluno(turma, "DIAG", nome);
+            if (sDiag > 0 && sPrimeiro <= sDiag) count++;
         }
         return count;
     }
@@ -1028,7 +1048,8 @@ function caRenderizarKPIs() {
                     var ultPer = ultimoPerReal(turma, nome);
                     somaAtual  = ultPer ? ultPer.soma : somaDiag;
                     somaBase   = somaDiag;
-                    temComparacao = somaDiag > 0 && ultPer !== null;
+                    /* temComparacao: verdadeiro se há qualquer período lançado com dado */
+                    temComparacao = ultPer !== null;
                     if (temComparacao) {
                         persSemEvoCount = contarPersSemEvo(turma, nome, somaAtual);
                     }

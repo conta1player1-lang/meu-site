@@ -562,8 +562,29 @@ async function sbAdicionarAluno(nome, nomeTurma) {
             }
             throw matIns.error;
         }
-        _cacheAlunos[turmaId + "|" + nome] = { id: alunoId, nome: nome, matricula_id: matIns.data.id };
-        return { id: alunoId, nome: nome, matricula_id: matIns.data.id };
+        var matriculaId = matIns.data.id;
+        _cacheAlunos[turmaId + "|" + nome] = { id: alunoId, nome: nome, matricula_id: matriculaId };
+
+        /* 3. Cria lançamento vazio para o período atual — garante que o aluno
+              apareça em outros dispositivos mesmo sem notas lançadas */
+        var periodoAtual = typeof getPeriodo === "function" ? getPeriodo() : (periodosArr[0] ? periodosArr[0].v : "DIAG");
+        var lancVazio = {
+            matricula_id:  matriculaId,
+            aluno_id:      alunoId,
+            periodo:       periodoAtual,
+            atualizado_em: new Date().toISOString(),
+            hab_0: null, hab_1: null, hab_2: null, hab_3: null,
+            hab_4: null, hab_5: null, hab_6: null
+        };
+        try {
+            await window.sbClient.from("lancamentos")
+                .upsert([lancVazio], { onConflict: "matricula_id,periodo", ignoreDuplicates: true });
+        } catch(eLanc) {
+            /* Falha silenciosa — não impede o cadastro do aluno */
+            console.warn("[sbAdicionarAluno] lancamento vazio nao criado:", eLanc.message);
+        }
+
+        return { id: alunoId, nome: nome, matricula_id: matriculaId };
     } catch(e) { console.error("[sbAdicionarAluno]", e.message); return null; }
 }
 
@@ -1215,31 +1236,9 @@ async function sbSincronizarTudo() {
        Etapa 2: lançamentos → mescla notas sem substituir lista
     */
 
-    /* ── ETAPA 1: Matriculados → garante que alunos aparecem mesmo sem lançamento ──
-       Escreve APENAS no período atual selecionado para não vazar entre períodos.
-       Se o localStorage estiver vazio (outro dispositivo), cria a lista com os do banco. */
-    try {
-        var turmas = getTurmasStorage();
-        var periodoAtual = normalizarPeriodo(typeof getPeriodo === "function" ? getPeriodo() : (periodosArr[0] ? periodosArr[0].v : "DIAG"));
-        for (var ti = 0; ti < turmas.length; ti++) {
-            var tObj      = turmas[ti];
-            var nomeTurma = normalizarTurma((typeof tObj === "object") ? tObj.nome : tObj);
-            try {
-                var matriculados = await sbBuscarAlunos(nomeTurma);
-                if (matriculados && matriculados.length > 0) {
-                    var nomesMatric = matriculados.map(function(m) { return normalizarAluno(m.nome); }).filter(Boolean);
-                    /* Escreve APENAS no período atual — sem vazar para outros períodos */
-                    var chave   = chaveAlunos(nomeTurma, periodoAtual);
-                    var jaLocal = JSON.parse(localStorage.getItem(chave) || "[]");
-                    var unidos  = Array.from(new Set(nomesMatric.concat(jaLocal)))
-                        .filter(Boolean)
-                        .sort(function(a, b) { return a.localeCompare(b, "pt-BR"); });
-                    localStorage.setItem(chave, JSON.stringify(unidos));
-                }
-            } catch(eM) { console.warn("[SB] Matriculados nao carregados para", nomeTurma, eM.message); }
-        }
-        console.log("[SB] Matriculados sincronizados.");
-    } catch(e) { console.warn("[SB] Etapa matriculados falhou:", e.message); }
+    /* Etapa 1 removida: alunos sem lançamento são persistidos via lançamento vazio
+       criado em sbAdicionarAluno — a Etapa 2 restaura corretamente em qualquer dispositivo */
+    console.log("[SB] Matriculados sincronizados.");
 
     /* ── ETAPA 2: Lançamentos → mescla sem substituir lista de alunos ── */
     try {
