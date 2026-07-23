@@ -1766,18 +1766,17 @@ function eaRemoverAluno() {
         "Remover aluno",
         "Deseja remover permanentemente \"" + nome + "\"? Todos os lançamentos serão apagados.",
         async function() {
-            var turma  = normalizarTurma(getTurmaAtual());
-            var nomeN  = normalizarAluno(nome);
-            /* Remove da lista do período atual apenas (igual ao comportamento original) */
+            var turma   = normalizarTurma(getTurmaAtual());
+            var nomeN   = normalizarAluno(nome);
+            var periodo = normalizarPeriodo(getPeriodo());
+            /* Remove da lista do período atual */
             salvarAlunos(getAlunos().filter(function(x){ return normalizarAluno(x) !== nomeN; }));
-            /* Apaga as notas de todos os períodos (matrícula é por turma, não por período) */
-            periodosArr.forEach(function(p) {
-                for (var i = 0; i < 7; i++) {
-                    localStorage.removeItem(chaveNota(turma, normalizarPeriodo(p.v), nomeN, i));
-                }
-            });
-            /* Remove do banco */
-            if (window.sbOnline) await sbDeletarAluno(nomeN, getTurmaAtual());
+            /* Apaga notas do período atual no localStorage */
+            for (var i = 0; i < 7; i++) {
+                localStorage.removeItem(chaveNota(turma, periodo, nomeN, i));
+            }
+            /* No banco: apaga só lançamentos do período atual */
+            if (window.sbOnline) await sbDeletarLancamentosPeriodo(nomeN, getTurmaAtual(), periodo);
             carregar();
             mostrarModalAviso("Aluno removido", "\"" + nome + "\" foi removido com sucesso.");
         }
